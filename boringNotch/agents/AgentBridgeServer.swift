@@ -30,8 +30,12 @@ struct AgentHookRequest {
             appBundleID: value("x-terminal-app"),
             sessionID: value("x-terminal-session"),
             tmuxPane: value("x-tmux-pane"),
+            tmuxSocket: value("x-tmux"),
             kittyWindow: value("x-kitty-window"),
-            weztermPane: value("x-wezterm-pane")
+            kittySocket: value("x-kitty-listen-on"),
+            weztermPane: value("x-wezterm-pane"),
+            pid: value("x-agent-pid").flatMap { Int32($0) },
+            remoteHost: value("x-agent-host")
         )
     }
 }
@@ -77,7 +81,6 @@ final class AgentBridgeServer: @unchecked Sendable {
     private let token: String
     private let handler: Handler
     private var listener: NWListener?
-    private var port: UInt16?
 
     /// Called on the main queue once the server is listening, with its port.
     var onReady: ((UInt16) -> Void)?
@@ -99,7 +102,6 @@ final class AgentBridgeServer: @unchecked Sendable {
             switch state {
             case .ready:
                 if let port = listener?.port?.rawValue {
-                    self.port = port
                     DispatchQueue.main.async { self.onReady?(port) }
                 }
             case .failed(let error):
@@ -217,10 +219,11 @@ final class AgentBridgeServer: @unchecked Sendable {
         }
 
         // Browsers always send Origin on cross-site POSTs; agents never do. Checking Host as well stops DNS
-        // rebinding, and the token stops other local processes from posting events.
+        // rebinding, and the token stops other local processes from posting events. Any port is accepted
+        // because agents on remote servers arrive through an SSH tunnel with its own port.
         guard headers["origin"] == nil,
-              let host = headers["host"], let port,
-              host == "127.0.0.1:\(port)" || host == "localhost:\(port)",
+              let host = headers["host"]?.lowercased(),
+              host.hasPrefix("127.0.0.1:") || host.hasPrefix("localhost:"),
               headers["x-boring-notch-token"] == token
         else { return .rejected(status: 403) }
 

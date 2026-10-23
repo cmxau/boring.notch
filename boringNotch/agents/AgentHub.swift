@@ -108,7 +108,11 @@ final class AgentHub: ObservableObject {
         TerminalJumper.jump(to: session.terminal)
     }
 
-    private func awaitDecision(
+    // MARK: - For integrations
+
+    /// Shows a request in the notch and waits for the user's decision. Returns `.handBack` if the agent stops
+    /// waiting, or nobody answers before the hand-back timeout.
+    func awaitDecision(
         _ kind: AgentRequest.Kind,
         sessionID: String,
         agent: AgentKind,
@@ -119,7 +123,11 @@ final class AgentHub: ObservableObject {
             continuations[request.id] = continuation
             requests.append(request)
 
-            AgentSoundPlayer.shared.play(.attention)
+            if case .questions = kind {
+                alert(.question)
+            } else {
+                alert(.attention)
+            }
             NotificationCenter.default.post(name: .agentNeedsAttention, object: nil)
 
             // The agent stopped waiting (interrupted, or its own hook timeout ran out)
@@ -138,206 +146,16 @@ final class AgentHub: ObservableObject {
         }
     }
 
-    // MARK: - Events
-
-    func handle(_ request: AgentHookRequest, cancellation: AgentRequestCancellation) async -> Data {
-        guard Defaults[.agentIntegrationEnabled], let agent = AgentKind(rawValue: request.agent) else { return Data() }
-        let payload = (try? JSONSerialization.jsonObject(with: request.body)) as? [String: Any] ?? [:]
-        removeStaleSessions()
-
-        switch agent {
-        case .claudeCode:
-            return await handleClaudeCode(request.event, payload, terminal: request.terminal, cancellation: cancellation)
-        case .codex:
-            handleCodex(payload, terminal: request.terminal)
-        case .geminiCLI:
-            handleGemini(request.event, payload, terminal: request.terminal)
-        }
-        return Data()
-    }
-
-    // MARK: Claude Code
-
-    private func handleClaudeCode(
-        _ event: String,
-        _ payload: [String: Any],
-        terminal: TerminalLocation,
-        cancellation: AgentRequestCancellation
-    ) async -> Data {
-        let id = "claude:" + (payload["session_id"] as? String ?? "default")
-        let cwd = payload["cwd"] as? String ?? ""
-        let tool = payload["tool_name"] as? String ?? ""
-        let input = payload["tool_input"] as? [String: Any] ?? [:]
-
-        func update(_ change: (inout AgentSession) -> Void) {
-            updateSession(id: id, kind: .claudeCode, cwd: cwd, terminal: terminal, change)
-        }
-
-        switch event {
-        case "SessionStart":
-            update { $0.status = .idle }
-
-        case "UserPromptSubmit":
-            update {
-                $0.status = .working
-                $0.activity = nil
-            }
-
-        case "PreToolUse":
-            guard tool == "AskUserQuestion", let questions = Self.questions(from: input) else {
-                update {
-                    $0.status = .working
-                    $0.activity = Self.activity(tool: tool, input: input)
-                }
-                return Data()
-            }
-
-            update {
-                $0.status = .waitingForInput
-                $0.activity = questions.first?.question
-            }
-            let decision = await awaitDecision(.questions(questions), sessionID: id, agent: .claudeCode, cancellation: cancellation)
-            resumeWorking(id)
-
-            guard case .answers(let answers) = decision else { return Data() }
-            var answered = input
-            answered["answers"] = answers
-            let output: [String: Any] = [
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "allow",
-                "updatedInput": answered,
-            ]
-            return Self.json(["hookSpecificOutput": output])
-
-        case "PermissionRequest":
-            let kind: AgentRequest.Kind = tool == "ExitPlanMode"
-                ? .plan(markdown: input["plan"] as? String ?? "")
-                : .permission(tool: tool, detail: Self.detail(tool: tool, input: input))
-            update {
-                $0.status = .waitingForApproval
-                $0.activity = tool == "ExitPlanMode" ? "Plan ready for review" : Self.activity(tool: tool, input: input)
-            }
-            let decision = await awaitDecision(kind, sessionID: id, agent: .claudeCode, cancellation: cancellation)
-            resumeWorking(id)
-
-            var result: [String: Any]
-            switch decision {
-            case .allow:
-                result = ["behavior": "allow"]
-                // Plan approval needs the input passed back along with "allow"
-                if tool == "ExitPlanMode" {
-                    result["updatedInput"] = input
-                }
-            case .deny(let message):
-                result = ["behavior": "deny"]
-                if let message {
-                    result["message"] = message
-                }
-            case .answers, .handBack:
-                return Data()
-            }
-            let output: [String: Any] = [
-                "hookEventName": "PermissionRequest",
-                "decision": result,
-            ]
-            return Self.json(["hookSpecificOutput": output])
-
-        case "Notification":
-            // Claude is showing its own permission prompt in the terminal (e.g. after the notch handed it back)
-            if payload["notification_type"] as? String == "permission_prompt",
-               !requests.contains(where: { $0.sessionID == id }) {
-                update {
-                    $0.status = .waitingForApproval
-                    $0.activity = payload["message"] as? String
-                }
-            }
-
-        case "Stop":
-            update {
-                $0.status = .finished
-                $0.activity = nil
-                $0.lastMessage = (payload["last_assistant_message"] as? String).map(Self.firstLine)
-            }
-            announceFinished(id)
-
-        case "SessionEnd":
-            endSession(id)
-
-        default:
-            break
-        }
-        return Data()
-    }
-
-    // MARK: Codex
-
-    private func handleCodex(_ payload: [String: Any], terminal: TerminalLocation) {
-        // Codex's notify program is only told when a turn completes
-        guard payload["type"] as? String == "agent-turn-complete" else { return }
-        let id = "codex:" + (payload["thread-id"] as? String ?? payload["turn-id"] as? String ?? "default")
-        updateSession(id: id, kind: .codex, cwd: payload["cwd"] as? String ?? "", terminal: terminal) {
-            $0.status = .finished
-            $0.activity = nil
-            $0.lastMessage = (payload["last-assistant-message"] as? String).map(Self.firstLine)
-        }
-        announceFinished(id)
-    }
-
-    // MARK: Gemini CLI
-
-    private func handleGemini(_ event: String, _ payload: [String: Any], terminal: TerminalLocation) {
-        let id = "gemini:" + (payload["session_id"] as? String ?? "default")
-        let cwd = payload["cwd"] as? String ?? ""
-
-        func update(_ change: (inout AgentSession) -> Void) {
-            updateSession(id: id, kind: .geminiCLI, cwd: cwd, terminal: terminal, change)
-        }
-
-        switch event {
-        case "SessionStart":
-            update { $0.status = .idle }
-        case "BeforeAgent":
-            update {
-                $0.status = .working
-                $0.activity = nil
-            }
-        case "BeforeTool", "AfterTool":
-            update {
-                $0.status = .working
-                $0.activity = Self.activity(tool: payload["tool_name"] as? String ?? "", input: payload["tool_input"] as? [String: Any] ?? [:])
-            }
-        case "Notification":
-            // Gemini asks for tool approval in the terminal; its hooks can't answer it, so point the user there
-            if payload["notification_type"] as? String == "ToolPermission" {
-                update {
-                    $0.status = .waitingForApproval
-                    $0.activity = payload["message"] as? String
-                }
-                AgentSoundPlayer.shared.play(.attention)
-            }
-        case "AfterAgent":
-            update {
-                $0.status = .finished
-                $0.activity = nil
-                $0.lastMessage = (payload["prompt_response"] as? String).map(Self.firstLine)
-            }
-            announceFinished(id)
-        case "SessionEnd":
-            endSession(id)
-        default:
-            break
-        }
-    }
-
-    // MARK: - Sessions
-
-    private func updateSession(
+    /// Creates or updates a session. Pass the agent's working folder and the event's terminal location;
+    /// empty values don't overwrite what's already known.
+    func updateSession(
         id: String,
         kind: AgentKind,
         cwd: String,
         terminal: TerminalLocation,
         _ change: (inout AgentSession) -> Void
     ) {
+        let isNew = sessions[id] == nil
         var session = sessions[id] ?? AgentSession(
             id: id,
             kind: kind,
@@ -350,15 +168,19 @@ final class AgentHub: ObservableObject {
             session.cwd = cwd
         }
         // Keep the richest location we've seen; some events come from processes without a terminal
-        if terminal.tty != nil || terminal.appBundleID != nil {
+        if terminal.tty != nil || terminal.appBundleID != nil || terminal.tmuxPane != nil {
             session.terminal = terminal
         }
         change(&session)
         session.updatedAt = Date()
         sessions[id] = session
+        if isNew {
+            alert(.sessionStarted)
+        }
     }
 
-    private func resumeWorking(_ id: String) {
+    /// Back to "working" after the user answers a request.
+    func resumeWorking(_ id: String) {
         guard var session = sessions[id], session.status.needsAttention else { return }
         session.status = .working
         session.activity = nil
@@ -366,9 +188,10 @@ final class AgentHub: ObservableObject {
         sessions[id] = session
     }
 
-    private func announceFinished(_ id: String) {
+    /// The agent finished its turn: play the "done" sound and show it briefly in the closed notch.
+    func announceFinished(_ id: String) {
         guard let session = sessions[id] else { return }
-        AgentSoundPlayer.shared.play(.done)
+        alert(.done)
 
         recentlyFinishedTask?.cancel()
         recentlyFinished = session
@@ -379,76 +202,43 @@ final class AgentHub: ObservableObject {
         }
     }
 
-    private func endSession(_ id: String) {
+    func endSession(_ id: String) {
         for request in requests where request.sessionID == id {
             resolve(request.id, with: .handBack)
         }
         sessions.removeValue(forKey: id)
     }
 
+    func hasPendingRequest(for sessionID: String) -> Bool {
+        requests.contains { $0.sessionID == sessionID }
+    }
+
+    func alert(_ cue: AgentSoundCue) {
+        AgentSoundPlayer.shared.play(cue)
+    }
+
+    // MARK: - Events
+
+    func handle(_ request: AgentHookRequest, cancellation: AgentRequestCancellation) async -> Data {
+        guard Defaults[.agentIntegrationEnabled], let integration = AgentRegistry.integration(id: request.agent) else {
+            return Data()
+        }
+        removeStaleSessions()
+        let event = AgentEvent(
+            name: request.event,
+            payload: (try? JSONSerialization.jsonObject(with: request.body)) as? [String: Any] ?? [:],
+            rawBody: request.body,
+            terminal: request.terminal,
+            cancellation: cancellation
+        )
+        return await integration.handle(event, hub: self)
+    }
+
     /// Drops sessions that went quiet long ago without ending (the terminal was closed, for example).
     private func removeStaleSessions() {
         let cutoff = Date().addingTimeInterval(-2 * 60 * 60)
-        for (id, session) in sessions where session.updatedAt < cutoff && !requests.contains(where: { $0.sessionID == id }) {
+        for (id, session) in sessions where session.updatedAt < cutoff && !hasPendingRequest(for: id) {
             sessions.removeValue(forKey: id)
         }
-    }
-
-    // MARK: - Formatting
-
-    private static func questions(from input: [String: Any]) -> [AgentQuestion]? {
-        guard let raw = input["questions"] as? [[String: Any]], !raw.isEmpty else { return nil }
-        let questions = raw.compactMap { item -> AgentQuestion? in
-            guard let question = item["question"] as? String else { return nil }
-            let options = (item["options"] as? [[String: Any]] ?? []).compactMap { option -> AgentQuestion.Option? in
-                guard let label = option["label"] as? String else { return nil }
-                return AgentQuestion.Option(label: label, description: option["description"] as? String)
-            }
-            return AgentQuestion(
-                question: question,
-                header: item["header"] as? String,
-                options: options,
-                multiSelect: item["multiSelect"] as? Bool ?? false
-            )
-        }
-        return questions.isEmpty ? nil : questions
-    }
-
-    /// One line for the session list, e.g. "Bash: npm test" or "Edit: ContentView.swift".
-    static func activity(tool: String, input: [String: Any]) -> String {
-        guard !tool.isEmpty else { return "Working" }
-        let target: String?
-        if let path = input["file_path"] as? String ?? input["notebook_path"] as? String ?? input["absolute_path"] as? String {
-            target = (path as NSString).lastPathComponent
-        } else {
-            target = input["command"] as? String
-                ?? input["url"] as? String
-                ?? input["query"] as? String
-                ?? input["pattern"] as? String
-                ?? input["description"] as? String
-        }
-        guard let target, !target.isEmpty else { return tool }
-        return "\(tool): \(firstLine(target))"
-    }
-
-    /// What's worth showing when asking for permission: the full command, path or URL.
-    static func detail(tool: String, input: [String: Any]) -> String {
-        if let command = input["command"] as? String { return command }
-        if let path = input["file_path"] as? String ?? input["notebook_path"] as? String { return path }
-        if let url = input["url"] as? String { return url }
-        guard JSONSerialization.isValidJSONObject(input),
-              let data = try? JSONSerialization.data(withJSONObject: input, options: [.prettyPrinted, .sortedKeys]),
-              let text = String(data: data, encoding: .utf8)
-        else { return tool }
-        return String(text.prefix(1000))
-    }
-
-    static func firstLine(_ text: String) -> String {
-        let line = text.split(whereSeparator: \.isNewline).first.map(String.init) ?? text
-        return String(line.prefix(200))
-    }
-
-    private static func json(_ object: [String: Any]) -> Data {
-        (try? JSONSerialization.data(withJSONObject: object, options: [.withoutEscapingSlashes])) ?? Data()
     }
 }

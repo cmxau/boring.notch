@@ -22,6 +22,8 @@ bridge="$HOME/.boring-notch/bridge"
 [ -r "$bridge" ] || exit 0
 port="$(sed -n 's/^port=//p' "$bridge" | head -n 1)"
 token="$(sed -n 's/^token=//p' "$bridge" | head -n 1)"
+# Set on remote servers, where the notch is reached through an SSH tunnel
+host="$(sed -n 's/^host=//p' "$bridge" | head -n 1)"
 case "$port" in
     '' | *[!0-9]*) exit 0 ;;
 esac
@@ -34,16 +36,22 @@ else
     payload="$(cat)"
 fi
 
-# Events that wait for a decision in the notch get a long timeout; the rest are fire-and-forget, so a
-# stuck notch can never hold an agent up for more than a few seconds.
+# Hooks that wait for a decision in the notch are installed with BORING_NOTCH_WAIT set: "always", or
+# "tools:A,B" to wait only for those tools. Everything else is fire-and-forget, so a stuck notch can never
+# hold an agent up for more than a few seconds.
 wait=3
-case "$event" in
-    PermissionRequest) wait=86400 ;;
-    PreToolUse)
-        # Only questions are answered from the notch; other tool calls just report progress
-        if printf '%s' "$payload" | grep -Eq '"tool_name"[[:space:]]*:[[:space:]]*"AskUserQuestion"'; then
-            wait=86400
-        fi
+case "${BORING_NOTCH_WAIT:-}" in
+    always) wait=86400 ;;
+    tools:*)
+        tools="${BORING_NOTCH_WAIT#tools:}"
+        old_ifs="$IFS"
+        IFS=','
+        for tool in $tools; do
+            if printf '%s' "$payload" | grep -Eq "\"tool_name\"[[:space:]]*:[[:space:]]*\"$tool\""; then
+                wait=86400
+            fi
+        done
+        IFS="$old_ifs"
         ;;
 esac
 
@@ -62,8 +70,11 @@ response="$(
         -H "X-Terminal-Program: ${TERM_PROGRAM:-}" \
         -H "X-Terminal-App: ${__CFBundleIdentifier:-}" \
         -H "X-Terminal-Session: ${ITERM_SESSION_ID:-${TERM_SESSION_ID:-}}" \
+        -H "X-Agent-Host: $host" \
+        -H "X-Tmux: ${TMUX:-}" \
         -H "X-Tmux-Pane: ${TMUX_PANE:-}" \
         -H "X-Kitty-Window: ${KITTY_WINDOW_ID:-}" \
+        -H "X-Kitty-Listen-On: ${KITTY_LISTEN_ON:-}" \
         -H "X-Wezterm-Pane: ${WEZTERM_PANE:-}" \
         --data-binary @- 2>/dev/null
 )" || exit 0

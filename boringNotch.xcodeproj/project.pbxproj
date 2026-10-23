@@ -7,6 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1DEC7579EE69C76F64E9EC1D /* AgentTerminalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FEB26AC5B5BAE731E6CE39 /* AgentTerminalSettings.swift */; };
+		B5E4686689953DC6F3AF8E83 /* AgentRemoteSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29315AC1B8270DBF04CFF274 /* AgentRemoteSettings.swift */; };
+		C6D3920DB04F71B211E1CA4C /* AgentUsageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F7656FA72EEF33EB151977 /* AgentUsageSettings.swift */; };
+		53E9C77B4C913E1240F705CE /* AgentSoundSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8444CDDC8BDA0DC3A7DD281E /* AgentSoundSettings.swift */; };
+		F800771D2A4A78BDFD769DFB /* AgentUsageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2D97F05C3D74BA411CB6D /* AgentUsageView.swift */; };
+		F06B5DA337E5F53A29A4AD30 /* AgentComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973C9B672BDAF5C0FC3E14AD /* AgentComponents.swift */; };
+		B191B53CE9685FAA13E2EA7A /* AgentRequestViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1822111975FBF63D56ED7E6 /* AgentRequestViews.swift */; };
+		80EC6EED978E563A0AEE0861 /* XPCHelperClient+Agents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61C054F6A9D2A99CEF45041 /* XPCHelperClient+Agents.swift */; };
+		EA27C6E6B91ECF105E26EE64 /* CodexIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA359F0FB1A7C1946CB7B023 /* CodexIntegration.swift */; };
+		20E4090BDDE2408BC07EE7C4 /* GeminiStyleIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0482EF09FF6772098950DB88 /* GeminiStyleIntegration.swift */; };
+		D19CA6369201B13450589BAD /* ClaudeStyleIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFAD4C0A16CA9F5161DE1827 /* ClaudeStyleIntegration.swift */; };
+		5F46CE251A3FA437BD28EAD0 /* AgentRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DDDEBC4D9FA00C11CE5B68 /* AgentRegistry.swift */; };
+		E074B12E53C3CFCA25F229E9 /* AgentIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1538A816EFF26F46C8869730 /* AgentIntegration.swift */; };
 		AAEE61B6FC485C2B03F5F57D /* AgentModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1A79E2FB2CE725B84C8FAE /* AgentModels.swift */; };
 		37605A969A369AC7985C024E /* AgentBridgeServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48ECDC26CEB757ED9572893F /* AgentBridgeServer.swift */; };
 		84B691C45A155F57EF00FA24 /* AgentHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D52CFC7EA86626471F59A5 /* AgentHub.swift */; };
@@ -208,6 +221,19 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		93FEB26AC5B5BAE731E6CE39 /* AgentTerminalSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentTerminalSettings.swift; sourceTree = "<group>"; };
+		29315AC1B8270DBF04CFF274 /* AgentRemoteSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRemoteSettings.swift; sourceTree = "<group>"; };
+		E6F7656FA72EEF33EB151977 /* AgentUsageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentUsageSettings.swift; sourceTree = "<group>"; };
+		8444CDDC8BDA0DC3A7DD281E /* AgentSoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSoundSettings.swift; sourceTree = "<group>"; };
+		B2C2D97F05C3D74BA411CB6D /* AgentUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentUsageView.swift; sourceTree = "<group>"; };
+		973C9B672BDAF5C0FC3E14AD /* AgentComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentComponents.swift; sourceTree = "<group>"; };
+		C1822111975FBF63D56ED7E6 /* AgentRequestViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRequestViews.swift; sourceTree = "<group>"; };
+		C61C054F6A9D2A99CEF45041 /* XPCHelperClient+Agents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCHelperClient+Agents.swift; sourceTree = "<group>"; };
+		CA359F0FB1A7C1946CB7B023 /* CodexIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexIntegration.swift; sourceTree = "<group>"; };
+		0482EF09FF6772098950DB88 /* GeminiStyleIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiStyleIntegration.swift; sourceTree = "<group>"; };
+		CFAD4C0A16CA9F5161DE1827 /* ClaudeStyleIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeStyleIntegration.swift; sourceTree = "<group>"; };
+		93DDDEBC4D9FA00C11CE5B68 /* AgentRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRegistry.swift; sourceTree = "<group>"; };
+		1538A816EFF26F46C8869730 /* AgentIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentIntegration.swift; sourceTree = "<group>"; };
 		4F1A79E2FB2CE725B84C8FAE /* AgentModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentModels.swift; sourceTree = "<group>"; };
 		48ECDC26CEB757ED9572893F /* AgentBridgeServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentBridgeServer.swift; sourceTree = "<group>"; };
 		67D52CFC7EA86626471F59A5 /* AgentHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentHub.swift; sourceTree = "<group>"; };
@@ -411,10 +437,35 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E2368531C4CEB79568DF2AC0 /* integrations */ = {
+			isa = PBXGroup;
+			children = (
+				CFAD4C0A16CA9F5161DE1827 /* ClaudeStyleIntegration.swift */,
+				0482EF09FF6772098950DB88 /* GeminiStyleIntegration.swift */,
+				CA359F0FB1A7C1946CB7B023 /* CodexIntegration.swift */,
+			);
+			path = integrations;
+			sourceTree = "<group>";
+		};
+		E856D35C4B1BCFF9692A15CB /* Agents */ = {
+			isa = PBXGroup;
+			children = (
+				E84146C989D19C55170C7A82 /* AgentsSettings.swift */,
+				8444CDDC8BDA0DC3A7DD281E /* AgentSoundSettings.swift */,
+				E6F7656FA72EEF33EB151977 /* AgentUsageSettings.swift */,
+				29315AC1B8270DBF04CFF274 /* AgentRemoteSettings.swift */,
+				93FEB26AC5B5BAE731E6CE39 /* AgentTerminalSettings.swift */,
+			);
+			path = Agents;
+			sourceTree = "<group>";
+		};
 		43F7F860A297834E56B9E1A3 /* Agents */ = {
 			isa = PBXGroup;
 			children = (
 				FC8F1C2B1EA43DBABFEFF0A0 /* AgentsView.swift */,
+				C1822111975FBF63D56ED7E6 /* AgentRequestViews.swift */,
+				973C9B672BDAF5C0FC3E14AD /* AgentComponents.swift */,
+				B2C2D97F05C3D74BA411CB6D /* AgentUsageView.swift */,
 			);
 			path = Agents;
 			sourceTree = "<group>";
@@ -429,6 +480,9 @@
 				131B2DF2EE7219CB2F6D7D31 /* TerminalJumper.swift */,
 				4A8AFC15C7FDFCB2D295E308 /* AgentSoundPlayer.swift */,
 				FA40F69E322CE9C76E6D4BF3 /* boring-agent-hook.sh */,
+				1538A816EFF26F46C8869730 /* AgentIntegration.swift */,
+				93DDDEBC4D9FA00C11CE5B68 /* AgentRegistry.swift */,
+				E2368531C4CEB79568DF2AC0 /* integrations */,
 			);
 			path = agents;
 			sourceTree = "<group>";
@@ -546,6 +600,7 @@
 			children = (
 				11F748652EC9AC9600F841DB /* BoringNotchXPCHelperProtocol.swift */,
 				11F748662EC9AC9600F841DB /* XPCHelperClient.swift */,
+				C61C054F6A9D2A99CEF45041 /* XPCHelperClient+Agents.swift */,
 			);
 			path = XPCHelperClient;
 			sourceTree = "<group>";
@@ -823,11 +878,11 @@
 			children = (
 				11F748832ECB27DC00F841DB /* MusicSlotConfigurationView.swift */,
 				11C5E3152DFE88510065821E /* SettingsView.swift */,
-				E84146C989D19C55170C7A82 /* AgentsSettings.swift */,
 				11C5E3112DFE85970065821E /* SettingsWindowController.swift */,
 				B1D6FD422C6603730015F173 /* SoftwareUpdater.swift */,
 				B1B112902C6A572100093D8F /* EditPanelView.swift */,
 				B1C448972C972CC4001F0858 /* ListItemPopover.swift */,
+				E856D35C4B1BCFF9692A15CB /* Agents */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1118,6 +1173,19 @@
 				507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */,
 				1471A8592C6281BD0058408D /* BoringNotchWindow.swift in Sources */,
 				14CEF4182C5CAED300855D72 /* ContentView.swift in Sources */,
+				1DEC7579EE69C76F64E9EC1D /* AgentTerminalSettings.swift in Sources */,
+				B5E4686689953DC6F3AF8E83 /* AgentRemoteSettings.swift in Sources */,
+				C6D3920DB04F71B211E1CA4C /* AgentUsageSettings.swift in Sources */,
+				53E9C77B4C913E1240F705CE /* AgentSoundSettings.swift in Sources */,
+				F800771D2A4A78BDFD769DFB /* AgentUsageView.swift in Sources */,
+				F06B5DA337E5F53A29A4AD30 /* AgentComponents.swift in Sources */,
+				B191B53CE9685FAA13E2EA7A /* AgentRequestViews.swift in Sources */,
+				80EC6EED978E563A0AEE0861 /* XPCHelperClient+Agents.swift in Sources */,
+				EA27C6E6B91ECF105E26EE64 /* CodexIntegration.swift in Sources */,
+				20E4090BDDE2408BC07EE7C4 /* GeminiStyleIntegration.swift in Sources */,
+				D19CA6369201B13450589BAD /* ClaudeStyleIntegration.swift in Sources */,
+				5F46CE251A3FA437BD28EAD0 /* AgentRegistry.swift in Sources */,
+				E074B12E53C3CFCA25F229E9 /* AgentIntegration.swift in Sources */,
 				9A987A0D2C73CA66005CA465 /* ShelfView.swift in Sources */,
 				1132E5142E777B920068732D /* YouTubeMusicNetworking.swift in Sources */,
 				1132E5122E777B6E0068732D /* YouTubeMusicModels.swift in Sources */,

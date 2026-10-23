@@ -8,34 +8,34 @@
 
 import Foundation
 
-enum AgentKind: String, CaseIterable, Identifiable, Codable {
-    case claudeCode = "claude"
-    case codex = "codex"
-    case geminiCLI = "gemini"
+/// An AI agent the notch knows about. Each one is described by an `AgentIntegration` in `AgentRegistry`.
+struct AgentKind: Hashable, Identifiable {
+    struct Capabilities: OptionSet, Hashable {
+        let rawValue: Int
 
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .claudeCode: return "Claude Code"
-        case .codex: return "Codex"
-        case .geminiCLI: return "Gemini CLI"
-        }
+        /// Working / needs you / done.
+        static let status = Capabilities(rawValue: 1 << 0)
+        /// Allow or deny tool calls from the notch.
+        static let approvals = Capabilities(rawValue: 1 << 1)
+        /// Answer the agent's multiple-choice questions from the notch.
+        static let questions = Capabilities(rawValue: 1 << 2)
+        /// Review and approve plans from the notch.
+        static let plans = Capabilities(rawValue: 1 << 3)
     }
 
-    var symbol: String {
-        switch self {
-        case .claudeCode: return "sparkle"
-        case .codex: return "chevron.left.forwardslash.chevron.right"
-        case .geminiCLI: return "diamond.fill"
-        }
-    }
+    /// Stable identifier, also the agent's path in the bridge URL (`/v1/hooks/<id>`), e.g. "claude".
+    let id: String
+    let displayName: String
+    /// SF Symbol shown for the agent.
+    let symbol: String
+    let capabilities: Capabilities
 
-    /// Whether the notch can approve tool calls and answer questions for this agent, rather than only
-    /// showing what it's doing.
     var supportsDecisions: Bool {
-        self == .claudeCode
+        !capabilities.isDisjoint(with: [.approvals, .questions, .plans])
     }
+
+    static func == (lhs: AgentKind, rhs: AgentKind) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
 enum AgentStatus: Equatable {
@@ -64,12 +64,20 @@ struct TerminalLocation: Equatable {
     /// iTerm2 or Terminal.app session identifier.
     var sessionID: String?
     var tmuxPane: String?
+    /// tmux server socket (`$TMUX`), needed to address the right tmux server.
+    var tmuxSocket: String?
     var kittyWindow: String?
+    /// kitty remote control socket (`$KITTY_LISTEN_ON`).
+    var kittySocket: String?
     var weztermPane: String?
+    /// The agent's process ID.
+    var pid: Int32?
+    /// Host name for agents running on a remote server over SSH; nil when they run on this Mac.
+    var remoteHost: String?
 }
 
 struct AgentSession: Identifiable, Equatable {
-    /// Agent kind and the agent's own session ID, so IDs from different agents never collide.
+    /// Agent ID, host (for remote agents) and the agent's own session ID, so IDs never collide.
     let id: String
     let kind: AgentKind
     var cwd: String
@@ -84,6 +92,8 @@ struct AgentSession: Identifiable, Equatable {
         let name = (cwd as NSString).lastPathComponent
         return name.isEmpty ? kind.displayName : name
     }
+
+    var remoteHost: String? { terminal.remoteHost }
 }
 
 struct AgentQuestion: Equatable {
@@ -117,6 +127,7 @@ struct AgentRequest: Identifiable, Equatable {
 
 enum AgentDecision: Equatable {
     case allow
+    /// Deny, optionally with a message for the agent (for plans, the user's feedback).
     case deny(message: String?)
     /// Answers keyed by question text. Multiple choices are joined with ", ".
     case answers([String: String])

@@ -9,24 +9,12 @@
 import Foundation
 
 extension BoringNotchXPCHelper {
-    /// Home-relative paths this helper will read or write.
-    private static let allowedFiles: Set<String> = [
-        ".boring-notch/bridge",
-        ".boring-notch/bin/boring-agent-hook",
-        ".claude/settings.json",
-        ".codex/config.toml",
-        ".gemini/settings.json",
-    ]
-
-    /// Home-relative folders whose existence can be checked, to see which agents are installed.
-    private static let allowedFolders: Set<String> = [".claude", ".codex", ".gemini"]
-
     private static var home: URL {
         FileManager.default.homeDirectoryForCurrentUser
     }
 
     @objc func agentFileExists(_ path: String, with reply: @escaping (Bool) -> Void) {
-        guard Self.allowedFiles.contains(path) || Self.allowedFolders.contains(path) else {
+        guard AgentFileAllowlist.canCheck(path) else {
             reply(false)
             return
         }
@@ -34,7 +22,7 @@ extension BoringNotchXPCHelper {
     }
 
     @objc func readAgentFile(_ path: String, with reply: @escaping (Data?) -> Void) {
-        guard Self.allowedFiles.contains(path) else {
+        guard AgentFileAllowlist.canRead(path) else {
             reply(nil)
             return
         }
@@ -42,7 +30,7 @@ extension BoringNotchXPCHelper {
     }
 
     @objc func writeAgentFile(_ path: String, contents: Data, executable: Bool, with reply: @escaping (String?) -> Void) {
-        guard Self.allowedFiles.contains(path) else {
+        guard AgentFileAllowlist.canWrite(path) else {
             reply("Not allowed to write \(path)")
             return
         }
@@ -75,5 +63,13 @@ extension BoringNotchXPCHelper {
         } catch {
             reply(error.localizedDescription)
         }
+    }
+
+    @objc func listAgentDirectory(_ path: String, with reply: @escaping ([String]?) -> Void) {
+        guard AgentFileAllowlist.canList(path) else {
+            reply(nil)
+            return
+        }
+        reply(try? FileManager.default.contentsOfDirectory(atPath: Self.home.appendingPathComponent(path).path))
     }
 }

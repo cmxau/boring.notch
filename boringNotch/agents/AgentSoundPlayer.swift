@@ -8,24 +8,38 @@
 import AVFoundation
 import Defaults
 
+/// Agent events that can play a sound.
+enum AgentSoundCue: String, CaseIterable, Identifiable {
+    /// A new agent session appeared.
+    case sessionStarted
+    /// An agent needs a permission or plan decision.
+    case attention
+    /// An agent asked a question.
+    case question
+    /// An agent finished its turn.
+    case done
+    /// An agent's turn failed.
+    case error
+
+    var id: String { rawValue }
+
+    /// The built-in 8-bit melody: frequencies in Hz and durations in seconds. Empty means silent by default.
+    var notes: [(frequency: Double, duration: Double)] {
+        switch self {
+        case .sessionStarted: return []
+        case .attention: return [(659.25, 0.08), (880.0, 0.08), (659.25, 0.08), (880.0, 0.14)]
+        case .question: return [(880.0, 0.08), (1174.66, 0.14)]
+        case .done: return [(523.25, 0.07), (659.25, 0.07), (783.99, 0.07), (1046.5, 0.16)]
+        case .error: return [(392.0, 0.1), (311.13, 0.18)]
+        }
+    }
+}
+
 @MainActor
 final class AgentSoundPlayer {
     static let shared = AgentSoundPlayer()
 
-    enum Cue {
-        /// An agent needs a decision or an answer.
-        case attention
-        /// An agent finished its turn.
-        case done
-
-        /// Frequencies in Hz and durations in seconds.
-        var notes: [(frequency: Double, duration: Double)] {
-            switch self {
-            case .attention: return [(659.25, 0.08), (880.0, 0.08), (659.25, 0.08), (880.0, 0.14)]
-            case .done: return [(523.25, 0.07), (659.25, 0.07), (783.99, 0.07), (1046.5, 0.16)]
-            }
-        }
-    }
+    typealias Cue = AgentSoundCue
 
     private let sampleRate = 44_100.0
     private var engine: AVAudioEngine?
@@ -33,7 +47,7 @@ final class AgentSoundPlayer {
     private var stopTask: Task<Void, Never>?
 
     func play(_ cue: Cue) {
-        guard Defaults[.agentSoundsEnabled],
+        guard Defaults[.agentSoundsEnabled], !cue.notes.isEmpty,
               let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1),
               let buffer = makeBuffer(cue, format: format)
         else { return }

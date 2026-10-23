@@ -26,8 +26,8 @@ struct AgentsSettings: View {
 
             if agentIntegrationEnabled {
                 Section {
-                    ForEach(AgentKind.allCases) { kind in
-                        AgentIntegrationRow(kind: kind, status: installer.statuses[kind])
+                    ForEach(AgentRegistry.kinds) { kind in
+                        AgentIntegrationRow(kind: kind, status: installer.status(of: kind))
                     }
                 } header: {
                     Text("Agents")
@@ -43,9 +43,6 @@ struct AgentsSettings: View {
                     Defaults.Toggle(key: .agentShowInClosedNotch) {
                         Text("Show agent activity in the closed notch")
                     }
-                    Defaults.Toggle(key: .agentSoundsEnabled) {
-                        Text("Play sounds")
-                    }
                     Picker("Hand unanswered requests back to the terminal", selection: $agentDecisionTimeout) {
                         Text("After 1 minute").tag(60.0)
                         Text("After 5 minutes").tag(300.0)
@@ -55,6 +52,11 @@ struct AgentsSettings: View {
                 } header: {
                     Text("Behavior")
                 }
+
+                AgentSoundSettingsSection()
+                AgentUsageSettingsSection()
+                AgentRemoteSettingsSection()
+                AgentTerminalSettingsSection()
             }
         }
         .navigationTitle("Agents")
@@ -97,7 +99,7 @@ private struct AgentIntegrationRow: View {
     private var detail: String {
         switch status {
         case .connected:
-            return kind.supportsDecisions ? "Connected: status, approvals, questions and plans" : "Connected: status only"
+            return "Connected: " + capabilitiesDescription
         case .notConnected:
             return "Not connected"
         case .failed(let message):
@@ -107,6 +109,14 @@ private struct AgentIntegrationRow: View {
         case .none:
             return "Checking…"
         }
+    }
+
+    private var capabilitiesDescription: String {
+        var parts = ["status"]
+        if kind.capabilities.contains(.approvals) { parts.append("approvals") }
+        if kind.capabilities.contains(.questions) { parts.append("questions") }
+        if kind.capabilities.contains(.plans) { parts.append("plans") }
+        return ListFormatter.localizedString(byJoining: parts)
     }
 
     private var detailColor: Color {
