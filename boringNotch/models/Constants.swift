@@ -94,6 +94,7 @@ extension Defaults.Keys {
     //static let openLastTabByDefault = Key<Bool>("openLastTabByDefault", default: false)
     static let showOnLockScreen = Key<Bool>("showOnLockScreen", default: false)
     static let showLockScreenAnimation = Key<Bool>("showLockScreenAnimation", default: true)
+    static let playLockScreenSounds = Key<Bool>("playLockScreenSounds", default: true)
     static let showAccessoryConnectedIndicator = Key<Bool>("showAccessoryConnectedIndicator", default: true)
     // MARK: AI agents
     static let agentIntegrationEnabled = Key<Bool>("agentIntegrationEnabled", default: true)

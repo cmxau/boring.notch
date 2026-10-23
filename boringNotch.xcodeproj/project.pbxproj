@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C8FC30C0F7476CE3F42A41E6 /* unlock.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9F9B62C5C88F0CD84BA32F91 /* unlock.caf */; };
+		F9FEF6E4C4BBA102EF47C303 /* lock.caf in Resources */ = {isa = PBXBuildFile; fileRef = 03A7961367A0CF4B55DAB791 /* lock.caf */; };
 		1DEC7579EE69C76F64E9EC1D /* AgentTerminalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FEB26AC5B5BAE731E6CE39 /* AgentTerminalSettings.swift */; };
 		B5E4686689953DC6F3AF8E83 /* AgentRemoteSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29315AC1B8270DBF04CFF274 /* AgentRemoteSettings.swift */; };
 		C6D3920DB04F71B211E1CA4C /* AgentUsageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F7656FA72EEF33EB151977 /* AgentUsageSettings.swift */; };
@@ -221,6 +223,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9F9B62C5C88F0CD84BA32F91 /* unlock.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = unlock.caf; sourceTree = "<group>"; };
+		03A7961367A0CF4B55DAB791 /* lock.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lock.caf; sourceTree = "<group>"; };
 		93FEB26AC5B5BAE731E6CE39 /* AgentTerminalSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentTerminalSettings.swift; sourceTree = "<group>"; };
 		29315AC1B8270DBF04CFF274 /* AgentRemoteSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRemoteSettings.swift; sourceTree = "<group>"; };
 		E6F7656FA72EEF33EB151977 /* AgentUsageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentUsageSettings.swift; sourceTree = "<group>"; };
@@ -437,6 +441,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		85B8C41A663ADDE579509B00 /* sounds */ = {
+			isa = PBXGroup;
+			children = (
+				03A7961367A0CF4B55DAB791 /* lock.caf */,
+				9F9B62C5C88F0CD84BA32F91 /* unlock.caf */,
+			);
+			path = sounds;
+			sourceTree = "<group>";
+		};
 		E2368531C4CEB79568DF2AC0 /* integrations */ = {
 			isa = PBXGroup;
 			children = (
@@ -741,6 +754,7 @@
 				14CEF41B2C5CAED400855D72 /* Preview Content */,
 				112FB72F2CCF12CC0015238C /* private */,
 				11CC44A12CEE614100C7244B /* BoringViewCoordinator.swift */,
+				85B8C41A663ADDE579509B00 /* sounds */,
 			);
 			path = boringNotch;
 			sourceTree = "<group>";
@@ -1048,6 +1062,8 @@
 				112B0EB92E30DD0F00562D6C /* mediaremote-adapter.pl in Resources */,
 				B17266E12C6532560031BA0D /* Localizable.xcstrings in Resources */,
 				14A7E5972C65FD31008C1BE9 /* boring.m4a in Resources */,
+				C8FC30C0F7476CE3F42A41E6 /* unlock.caf in Resources */,
+				F9FEF6E4C4BBA102EF47C303 /* lock.caf in Resources */,
 				94B6E5175F304504252AF759 /* boring-agent-hook.sh in Resources */,
 				CEA0CE1422054560FB134F8D /* airpods-3.mp4 in Resources */,
 				7ACCC9A98ACA7DDA9CFFB2B6 /* airpods-4.mp4 in Resources */,

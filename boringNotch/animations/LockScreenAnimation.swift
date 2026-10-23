@@ -6,6 +6,8 @@
 //  similar to the Face ID unlock on iPhone.
 //
 
+import AVFoundation
+import Defaults
 import SwiftUI
 
 enum LockScreenIndicatorState {
@@ -167,6 +169,35 @@ struct LockScreenAnimation: View {
 
             phase = .unlocked
         }
+    }
+}
+
+/// The lock and unlock clicks that go with the padlock animation.
+@MainActor
+enum LockScreenSounds {
+    enum Sound: String {
+        case lock
+        case unlock
+    }
+
+    private static var players: [Sound: AVAudioPlayer] = [:]
+
+    static func play(_ sound: Sound) {
+        guard Defaults[.playLockScreenSounds] else { return }
+
+        let player: AVAudioPlayer
+        if let cached = players[sound] {
+            player = cached
+        } else {
+            guard let url = Bundle.main.url(forResource: sound.rawValue, withExtension: "caf"),
+                  let loaded = try? AVAudioPlayer(contentsOf: url)
+            else { return }
+            loaded.prepareToPlay()
+            players[sound] = loaded
+            player = loaded
+        }
+        player.currentTime = 0
+        player.play()
     }
 }
 

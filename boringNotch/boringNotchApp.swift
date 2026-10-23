@@ -174,6 +174,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             viewModels.values.forEach { $0.close() }
             coordinator.lockScreenIndicator = .locked
         }
+        LockScreenSounds.play(.lock)
     }
 
     /// Pops the padlock open, keeps it on screen for 3 seconds, then tucks it away.
@@ -183,8 +184,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         coordinator.lockScreenIndicator = .unlocked
 
         lockIndicatorHideTask = Task { @MainActor in
+            // Click as the shackle starts to lift (the animation first waits 0.12 s for the lock screen to fade)
+            try? await Task.sleep(for: .milliseconds(120))
+            guard !Task.isCancelled else { return }
+            LockScreenSounds.play(.unlock)
+
             // The opening animation takes ~1s, then the open padlock stays up for 3s
-            try? await Task.sleep(for: .seconds(4))
+            try? await Task.sleep(for: .milliseconds(3880))
             guard !Task.isCancelled else { return }
             withAnimation(.spring(response: 0.45, dampingFraction: 1.0)) {
                 self.coordinator.lockScreenIndicator = .hidden
