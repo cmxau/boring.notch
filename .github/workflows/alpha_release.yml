@@ -1,7 +1,9 @@
 name: "Alpha Release"
 
 # Builds an ad-hoc signed alpha DMG and publishes it as a GitHub pre-release.
-# Needs no signing secrets, so it works on forks. Ad-hoc signed apps aren't notarized: on first launch,
+# Needs no signing secrets, so it works on forks. The hardened runtime is off: it would refuse the bundled
+# MediaRemoteAdapter.framework, which keeps the upstream team's signature, and it's only needed for notarization.
+# Ad-hoc signed apps aren't notarized: on first launch,
 # right-click the app and choose Open (or run `xattr -dr com.apple.quarantine "/Applications/Boring Notch.app"`).
 
 on:
@@ -83,6 +85,7 @@ jobs:
             CODE_SIGN_IDENTITY=- \
             DEVELOPMENT_TEAM= \
             PROVISIONING_PROFILE_SPECIFIER= \
+            ENABLE_HARDENED_RUNTIME=NO \
             ONLY_ACTIVE_ARCH=NO \
             > build.log 2>&1 || {
               grep -E "error:" build.log | sort -u | head -n 100
@@ -102,6 +105,22 @@ jobs:
 
       - name: Verify signature
         run: codesign --verify --deep --strict --verbose=2 "Release/$APP_NAME.app"
+
+      # Catches builds that can't start, such as a bundled framework the system refuses to load
+      - name: Launch test
+        run: |
+          set -uo pipefail
+          "Release/$APP_NAME.app/Contents/MacOS/$APP_NAME" > launch.log 2>&1 &
+          PID=$!
+          sleep 20
+          if kill -0 "$PID" 2>/dev/null; then
+            echo "Still running after 20 s"
+            kill "$PID"
+          else
+            cat launch.log
+            echo "::error::The app exited during launch"
+            exit 1
+          fi
 
       - name: Create DMG
         env:
