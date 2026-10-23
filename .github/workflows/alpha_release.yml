@@ -1,0 +1,148 @@
+name: "Alpha Release"
+
+# Builds an ad-hoc signed alpha DMG and publishes it as a GitHub pre-release.
+# Needs no signing secrets, so it works on forks. Ad-hoc signed apps aren't notarized: on first launch,
+# right-click the app and choose Open (or run `xattr -dr com.apple.quarantine "/Applications/Boring Notch.app"`).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Alpha version, for example 2.8.0-alpha.1"
+        required: true
+        type: string
+      publish:
+        description: "Publish a GitHub pre-release with the DMG (otherwise only upload it as a build artifact)"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: alpha-release
+  cancel-in-progress: false
+
+env:
+  PROJECT_NAME: boringNotch
+  APP_NAME: Boring Notch
+
+jobs:
+  build:
+    name: Build alpha DMG
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?-alpha(\.[0-9]+)?$ ]]; then
+            echo "::error::Version must look like 2.8.0-alpha.1"
+            exit 1
+          fi
+
+      - name: Show Xcode
+        run: xcodebuild -version
+
+      - name: Stamp version and turn off automatic updates
+        env:
+          VERSION: ${{ inputs.version }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          # Above the build it's based on, so it never looks older than that release
+          BASE_BUILD="$(grep -Eo 'CURRENT_PROJECT_VERSION = [0-9]+' "$PROJECT_NAME.xcodeproj/project.pbxproj" | grep -Eo '[0-9]+$' | sort -n | tail -1)"
+          python3 .github/scripts/stamp_version.py \
+            --pbxproj "$PROJECT_NAME.xcodeproj/project.pbxproj" \
+            --version "$VERSION" \
+            --build-number "$(( ${BASE_BUILD:-0} + RUN_NUMBER ))" \
+            --info-plist "$PROJECT_NAME/Info.plist"
+          # The update feed is the official one; an alpha shouldn't replace itself with a release build
+          /usr/libexec/PlistBuddy -c "Add :SUEnableAutomaticChecks bool false" "$PROJECT_NAME/Info.plist" \
+            || /usr/libexec/PlistBuddy -c "Set :SUEnableAutomaticChecks false" "$PROJECT_NAME/Info.plist"
+
+      - name: Resolve Swift packages
+        run: xcodebuild -resolvePackageDependencies -project "$PROJECT_NAME.xcodeproj"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          xcodebuild build \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$PROJECT_NAME" \
+            -configuration Release \
+            -destination "generic/platform=macOS" \
+            -derivedDataPath build \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY=- \
+            DEVELOPMENT_TEAM= \
+            PROVISIONING_PROFILE_SPECIFIER= \
+            ONLY_ACTIVE_ARCH=NO \
+            > build.log 2>&1 || {
+              grep -E "error:" build.log | sort -u | head -n 100
+              tail -n 100 build.log
+              exit 1
+            }
+          mkdir -p Release
+          cp -R "build/Build/Products/Release/$APP_NAME.app" Release/
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+
+      - name: Verify signature
+        run: codesign --verify --deep --strict --verbose=2 "Release/$APP_NAME.app"
+
+      - name: Create DMG
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/venv"
+          source "$RUNNER_TEMP/venv/bin/activate"
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install --require-hashes -r Configuration/dmg/requirements.txt
+          chmod +x Configuration/dmg/create_dmg.sh
+          ./Configuration/dmg/create_dmg.sh \
+            "Release/$APP_NAME.app" \
+            "Release/$PROJECT_NAME-$VERSION.dmg" \
+            "$APP_NAME $VERSION"
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ env.PROJECT_NAME }}-${{ inputs.version }}.dmg
+          path: Release/${{ env.PROJECT_NAME }}-${{ inputs.version }}.dmg
+
+      - name: Publish pre-release
+        if: inputs.publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/notes.md" <<NOTES
+          Alpha build of Boring Notch ${VERSION}, from ${GITHUB_SHA}.
+
+          This build is ad-hoc signed and not notarized. To open it the first time, right-click Boring Notch in Applications and choose Open, or run:
+
+              xattr -dr com.apple.quarantine "/Applications/Boring Notch.app"
+
+          Automatic update checks are turned off in this build.
+          NOTES
+          gh release create "v${VERSION}" "Release/${PROJECT_NAME}-${VERSION}.dmg" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Boring Notch ${VERSION}" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            --prerelease
