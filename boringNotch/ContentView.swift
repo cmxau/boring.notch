@@ -67,11 +67,22 @@ struct ContentView: View {
         max(0, vm.effectiveClosedNotchHeight - 12)
     }
 
+    private var accessoryArtworkSize: CGFloat {
+        max(0, vm.effectiveClosedNotchHeight - 4)
+    }
+
+    /// Both sides of the accessory indicator share this width so the notch stays centred under the camera.
+    private var accessoryWingWidth: CGFloat {
+        max(accessoryArtworkSize, 66)
+    }
+
     private var computedChinWidth: CGFloat {
         var chinWidth: CGFloat = vm.closedNotchSize.width
 
         if coordinator.lockScreenIndicator != .hidden && vm.notchState == .closed {
             chinWidth += (2 * lockIndicatorSlotSize + 20)
+        } else if coordinator.accessoryIndicator != nil && vm.notchState == .closed {
+            chinWidth += (2 * accessoryWingWidth + 20)
         } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
             && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
         {
@@ -270,6 +281,8 @@ struct ContentView: View {
                 } else {
                     if coordinator.lockScreenIndicator != .hidden && vm.notchState == .closed {
                         LockIndicatorActivity()
+                    } else if let accessory = coordinator.accessoryIndicator, vm.notchState == .closed {
+                        AccessoryConnectedActivity(accessory)
                     } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
                         && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
                     {
@@ -396,6 +409,30 @@ struct ContentView: View {
                 .frame(width: lockIndicatorSlotSize, height: lockIndicatorSlotSize)
         }
         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+    }
+
+    @ViewBuilder
+    func AccessoryConnectedActivity(_ accessory: ConnectedAccessory) -> some View {
+        HStack {
+            AccessoryArtworkView(artwork: accessory.artwork, size: accessoryArtworkSize)
+                .id(accessory.id)
+                .frame(width: accessoryWingWidth, alignment: .leading)
+
+            Rectangle()
+                .fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            Text("Connected")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .fixedSize()
+                .frame(width: accessoryWingWidth, alignment: .trailing)
+                .transition(.opacity)
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(accessory.name) connected")
     }
 
     @ViewBuilder

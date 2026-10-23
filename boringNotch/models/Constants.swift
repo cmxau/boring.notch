@@ -94,6 +94,9 @@ extension Defaults.Keys {
     //static let openLastTabByDefault = Key<Bool>("openLastTabByDefault", default: false)
     static let showOnLockScreen = Key<Bool>("showOnLockScreen", default: false)
     static let showLockScreenAnimation = Key<Bool>("showLockScreenAnimation", default: true)
+    static let showAccessoryConnectedIndicator = Key<Bool>("showAccessoryConnectedIndicator", default: true)
+    /// AirPods Max colour bytes seen in their BLE advertisements, by Bluetooth address
+    static let airPodsMaxColorCodes = Key<[String: Int]>("airPodsMaxColorCodes", default: [:])
     static let hideFromScreenRecording = Key<Bool>("hideFromScreenRecording", default: false)
     
     // MARK: Appearance

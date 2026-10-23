@@ -1628,6 +1628,9 @@ struct Advanced: View {
                 Defaults.Toggle(key: .showLockScreenAnimation) {
                     Text("Show lock and unlock animation")
                 }
+                Defaults.Toggle(key: .showAccessoryConnectedIndicator) {
+                    Text("Show when accessories connect")
+                }
                 Defaults.Toggle(key: .hideFromScreenRecording) {
                     Text("Hide from screen recording")
                 }

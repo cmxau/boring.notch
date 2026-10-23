@@ -7,6 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3C9FF52383E54179D4C84C33 /* BluetoothAccessoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D347922C564B1F1EA18019A2 /* BluetoothAccessoryManager.swift */; };
+		B7DF3522A9B89D48D60198E9 /* AccessoryIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8036BB93125F3A4FF2E320 /* AccessoryIndicatorView.swift */; };
+		CEA0CE1422054560FB134F8D /* airpods-3.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 7E5F23B14C6D3FB91C114162 /* airpods-3.mp4 */; };
+		7ACCC9A98ACA7DDA9CFFB2B6 /* airpods-4.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 4709C5CC06FE7863EA281D4B /* airpods-4.mp4 */; };
+		332D460047562481CB4142A6 /* airpods-max-blue.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6098ED722BECB55E0560ADF3 /* airpods-max-blue.mp4 */; };
+		5161BC50CCF702AD3CC691E7 /* airpods-max-green.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6C79B9F3B91E16E1E3DAB872 /* airpods-max-green.mp4 */; };
+		FD22CB5B17FF8BEF48ADCFCC /* airpods-max-midnight.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = D3CB104536BD3F825B80055E /* airpods-max-midnight.mp4 */; };
+		080A79F8BFBCDAE8931103F1 /* airpods-max-orange.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 906B9928A6D509B3A1634F6F /* airpods-max-orange.mp4 */; };
+		93E983B63A336468741D90C9 /* airpods-max-purple.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 63493B093B702EA22C1C5460 /* airpods-max-purple.mp4 */; };
+		24D9DB5AA4F7BA72D6A912E5 /* airpods-max-red.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = E06D9E789FE4B6BD74883F4E /* airpods-max-red.mp4 */; };
+		8EEF45EB023A3C01A9559F29 /* airpods-max-silver.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = FEF14045F17927BEC6126E4E /* airpods-max-silver.mp4 */; };
+		99BFD3F6020FA39C6C75BFB9 /* airpods-max-sky-blue.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 84AA41A5120F71A393D82EB0 /* airpods-max-sky-blue.mp4 */; };
+		BFA4B0FA2F9B6CBD45FDCAF8 /* airpods-max-space-gray.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 9A7CA02393AECB760EF48004 /* airpods-max-space-gray.mp4 */; };
+		ACCEE04C5EDD5F26C5914493 /* airpods-max-starlight.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 5067DD04703D8767029B77DE /* airpods-max-starlight.mp4 */; };
+		E104C7FAB9B58D6F713AF8B2 /* airpods-pro-2.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 9444D8E276560586E36FE63F /* airpods-pro-2.mp4 */; };
+		39052D2E081F2F42AE5BF5F5 /* airpods-pro-3.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 49F6AC23ACDFD05C3DEB21D3 /* airpods-pro-3.mp4 */; };
+		D6B6242F529063C40B7EF428 /* airpods-pro.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 3350461D6736820399AD2875 /* airpods-pro.mp4 */; };
 		1100290C2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */; };
 		110029272E84FD4C00035A57 /* TemporaryFileStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110029262E84FD4C00035A57 /* TemporaryFileStorageService.swift */; };
 		1100292A2E8691B400035A57 /* FileShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110029292E8691B400035A57 /* FileShareView.swift */; };
@@ -182,6 +199,23 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D347922C564B1F1EA18019A2 /* BluetoothAccessoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothAccessoryManager.swift; sourceTree = "<group>"; };
+		5C8036BB93125F3A4FF2E320 /* AccessoryIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoryIndicatorView.swift; sourceTree = "<group>"; };
+		7E5F23B14C6D3FB91C114162 /* airpods-3.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-3.mp4; sourceTree = "<group>"; };
+		4709C5CC06FE7863EA281D4B /* airpods-4.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-4.mp4; sourceTree = "<group>"; };
+		6098ED722BECB55E0560ADF3 /* airpods-max-blue.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-blue.mp4; sourceTree = "<group>"; };
+		6C79B9F3B91E16E1E3DAB872 /* airpods-max-green.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-green.mp4; sourceTree = "<group>"; };
+		D3CB104536BD3F825B80055E /* airpods-max-midnight.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-midnight.mp4; sourceTree = "<group>"; };
+		906B9928A6D509B3A1634F6F /* airpods-max-orange.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-orange.mp4; sourceTree = "<group>"; };
+		63493B093B702EA22C1C5460 /* airpods-max-purple.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-purple.mp4; sourceTree = "<group>"; };
+		E06D9E789FE4B6BD74883F4E /* airpods-max-red.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-red.mp4; sourceTree = "<group>"; };
+		FEF14045F17927BEC6126E4E /* airpods-max-silver.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-silver.mp4; sourceTree = "<group>"; };
+		84AA41A5120F71A393D82EB0 /* airpods-max-sky-blue.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-sky-blue.mp4; sourceTree = "<group>"; };
+		9A7CA02393AECB760EF48004 /* airpods-max-space-gray.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-space-gray.mp4; sourceTree = "<group>"; };
+		5067DD04703D8767029B77DE /* airpods-max-starlight.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-max-starlight.mp4; sourceTree = "<group>"; };
+		9444D8E276560586E36FE63F /* airpods-pro-2.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-pro-2.mp4; sourceTree = "<group>"; };
+		49F6AC23ACDFD05C3DEB21D3 /* airpods-pro-3.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-pro-3.mp4; sourceTree = "<group>"; };
+		3350461D6736820399AD2875 /* airpods-pro.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file.mp4; path = airpods-pro.mp4; sourceTree = "<group>"; };
 		1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSItemProvider+LoadHelpers.swift"; sourceTree = "<group>"; };
 		110029262E84FD4C00035A57 /* TemporaryFileStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryFileStorageService.swift; sourceTree = "<group>"; };
 		110029292E8691B400035A57 /* FileShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileShareView.swift; sourceTree = "<group>"; };
@@ -359,6 +393,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		31CC9EBE7CAEA5A3F11CE641 /* accessories */ = {
+			isa = PBXGroup;
+			children = (
+				7E5F23B14C6D3FB91C114162 /* airpods-3.mp4 */,
+				4709C5CC06FE7863EA281D4B /* airpods-4.mp4 */,
+				6098ED722BECB55E0560ADF3 /* airpods-max-blue.mp4 */,
+				6C79B9F3B91E16E1E3DAB872 /* airpods-max-green.mp4 */,
+				D3CB104536BD3F825B80055E /* airpods-max-midnight.mp4 */,
+				906B9928A6D509B3A1634F6F /* airpods-max-orange.mp4 */,
+				63493B093B702EA22C1C5460 /* airpods-max-purple.mp4 */,
+				E06D9E789FE4B6BD74883F4E /* airpods-max-red.mp4 */,
+				FEF14045F17927BEC6126E4E /* airpods-max-silver.mp4 */,
+				84AA41A5120F71A393D82EB0 /* airpods-max-sky-blue.mp4 */,
+				9A7CA02393AECB760EF48004 /* airpods-max-space-gray.mp4 */,
+				5067DD04703D8767029B77DE /* airpods-max-starlight.mp4 */,
+				9444D8E276560586E36FE63F /* airpods-pro-2.mp4 */,
+				49F6AC23ACDFD05C3DEB21D3 /* airpods-pro-3.mp4 */,
+				3350461D6736820399AD2875 /* airpods-pro.mp4 */,
+			);
+			path = accessories;
+			sourceTree = "<group>";
+		};
 		1113ABB82E80E27000EC13B2 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -516,6 +572,7 @@
 				F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */,
 				112FB7342CCF16F70015238C /* NotchSpaceManager.swift */,
 				147163992C5D35FF0068B555 /* MusicManager.swift */,
+				D347922C564B1F1EA18019A2 /* BluetoothAccessoryManager.swift */,
 				149E0B962C737D00006418B1 /* WebcamManager.swift */,
 				14C08BB52C8DE42D000F8AA0 /* CalendarManager.swift */,
 				B1F0A0012E60000100000001 /* BrightnessManager.swift */,
@@ -581,6 +638,7 @@
 				B17266E02C6532560031BA0D /* Localizable.xcstrings */,
 				14CEF4192C5CAED400855D72 /* Assets.xcassets */,
 				14A7E5962C65FD31008C1BE9 /* boring.m4a */,
+				31CC9EBE7CAEA5A3F11CE641 /* accessories */,
 				1443E7F42C609E650027C1FC /* Info.plist */,
 				14CEF41E2C5CAED400855D72 /* boringNotch.entitlements */,
 				14CEF41B2C5CAED400855D72 /* Preview Content */,
@@ -708,6 +766,7 @@
 			isa = PBXGroup;
 			children = (
 				1194E8862EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift */,
+				5C8036BB93125F3A4FF2E320 /* AccessoryIndicatorView.swift */,
 				1160F8D72DD98230006FBB94 /* NotchShape.swift */,
 				9AB0C6BB2C73C9CB00F7CD30 /* NotchHomeView.swift */,
 				14D570C52C5F38210011E668 /* BoringHeader.swift */,
@@ -891,6 +950,21 @@
 				112B0EB92E30DD0F00562D6C /* mediaremote-adapter.pl in Resources */,
 				B17266E12C6532560031BA0D /* Localizable.xcstrings in Resources */,
 				14A7E5972C65FD31008C1BE9 /* boring.m4a in Resources */,
+				CEA0CE1422054560FB134F8D /* airpods-3.mp4 in Resources */,
+				7ACCC9A98ACA7DDA9CFFB2B6 /* airpods-4.mp4 in Resources */,
+				332D460047562481CB4142A6 /* airpods-max-blue.mp4 in Resources */,
+				5161BC50CCF702AD3CC691E7 /* airpods-max-green.mp4 in Resources */,
+				FD22CB5B17FF8BEF48ADCFCC /* airpods-max-midnight.mp4 in Resources */,
+				080A79F8BFBCDAE8931103F1 /* airpods-max-orange.mp4 in Resources */,
+				93E983B63A336468741D90C9 /* airpods-max-purple.mp4 in Resources */,
+				24D9DB5AA4F7BA72D6A912E5 /* airpods-max-red.mp4 in Resources */,
+				8EEF45EB023A3C01A9559F29 /* airpods-max-silver.mp4 in Resources */,
+				99BFD3F6020FA39C6C75BFB9 /* airpods-max-sky-blue.mp4 in Resources */,
+				BFA4B0FA2F9B6CBD45FDCAF8 /* airpods-max-space-gray.mp4 in Resources */,
+				ACCEE04C5EDD5F26C5914493 /* airpods-max-starlight.mp4 in Resources */,
+				E104C7FAB9B58D6F713AF8B2 /* airpods-pro-2.mp4 in Resources */,
+				39052D2E081F2F42AE5BF5F5 /* airpods-pro-3.mp4 in Resources */,
+				D6B6242F529063C40B7EF428 /* airpods-pro.mp4 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -962,6 +1036,8 @@
 				1132E5162E777C140068732D /* YouTubeMusicAuthentication.swift in Sources */,
 				14A7E5882C64A89C008C1BE9 /* HelloAnimation.swift in Sources */,
 				F268A69CE40ABCEB9F297236 /* LockScreenAnimation.swift in Sources */,
+				B7DF3522A9B89D48D60198E9 /* AccessoryIndicatorView.swift in Sources */,
+				3C9FF52383E54179D4C84C33 /* BluetoothAccessoryManager.swift in Sources */,
 				111BEA612ED09B1B0079DD4E /* NSScreen+UUID.swift in Sources */,
 				1153BD8F2D986B1F00979FB0 /* MediaControllerProtocol.swift in Sources */,
 				9AB0C6BD2C73C9CB00F7CD30 /* NotchHomeView.swift in Sources */,
@@ -1244,6 +1320,7 @@
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app uses AppleEvents to control music";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app uses Bluetooth to show which accessory just connected, like your AirPods";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app uses the calendar to display your calendar events";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to display a live camera view";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -1298,6 +1375,7 @@
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app uses AppleEvents to control music";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app uses Bluetooth to show which accessory just connected, like your AirPods";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app uses the calendar to display your calendar events";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to display a live camera view";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

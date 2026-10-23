@@ -547,6 +547,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         setupDragDetectors()
+        BluetoothAccessoryManager.shared.start()
 
         if coordinator.firstLaunch {
             DispatchQueue.main.async {
