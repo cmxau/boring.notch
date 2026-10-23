@@ -9,7 +9,8 @@ permissions: {}
 jobs:
   comment:
     name: Sync PR target guidance comment
-    if: ${{ github.event.pull_request.head.repo.fork == true }}
+    # Only PRs from another repository; a fork's own branches may target its main
+    if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -55,8 +56,8 @@ jobs:
               pull_number: prNumber
             });
 
-            if (pr.data.head.repo.fork !== true) {
-              core.info('PR does not come from a fork; skipping comment sync.');
+            if (pr.data.head.repo.full_name === context.payload.repository.full_name) {
+              core.info('PR does not come from another repository; skipping comment sync.');
               return;
             }
 
