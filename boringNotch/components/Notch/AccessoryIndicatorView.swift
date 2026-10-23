@@ -18,14 +18,15 @@ struct AccessoryArtworkView: View {
     var body: some View {
         Group {
             switch artwork {
-            case .video(let name):
+            case .video(let name, let fallbackSymbol):
                 if let url = Bundle.main.url(forResource: name, withExtension: "mp4") {
                     LoopingVideoView(url: url)
                 } else {
-                    Image(systemName: "airpods")
+                    Image(systemName: fallbackSymbol)
                         .resizable()
                         .scaledToFit()
                         .padding(size * 0.2)
+                        .foregroundStyle(.white)
                 }
             case .symbol(let name):
                 Image(systemName: name)
@@ -143,6 +144,7 @@ final class LoopingVideoPlayback: ObservableObject {
     HStack(spacing: 16) {
         AccessoryArtworkView(artwork: .video("airpods-pro-2"), size: 40)
         AccessoryArtworkView(artwork: .video("airpods-max-sky-blue"), size: 40)
+        AccessoryArtworkView(artwork: .video("ps5-controller", fallbackSymbol: "gamecontroller.fill"), size: 40)
         AccessoryArtworkView(artwork: .symbol("keyboard.fill"), size: 40)
     }
     .padding()

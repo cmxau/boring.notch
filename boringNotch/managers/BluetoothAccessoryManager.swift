@@ -12,8 +12,9 @@ import IOBluetooth
 import os
 
 enum AccessoryArtwork: Equatable {
-    /// A looping clip bundled with the app, named without its `.mp4` extension.
-    case video(String)
+    /// A looping clip bundled with the app, named without its `.mp4` extension, and the SF Symbol to use if
+    /// the clip is missing.
+    case video(String, fallbackSymbol: String = "airpods")
     /// An SF Symbol for accessories we don't have a clip for.
     case symbol(String)
 }
@@ -197,6 +198,11 @@ final class BluetoothAccessoryManager: NSObject {
 
     private func artwork(for device: IOBluetoothDevice, address: String, name: String) async -> AccessoryArtwork {
         let info = await productInfo(of: device)
+
+        if Self.isDualSense(info: info, name: name) {
+            return .video("ps5-controller", fallbackSymbol: "gamecontroller.fill")
+        }
+
         let model = info.flatMap { Self.isApple(vendorID: $0.vendor) ? AirPodsModel(productID: $0.product) : nil }
             ?? AirPodsModel(name: name)
 
@@ -244,6 +250,14 @@ final class BluetoothAccessoryManager: NSObject {
     }
 
     // MARK: - Device details
+
+    /// PS5 DualSense and DualSense Edge controllers.
+    private static func isDualSense(info: (vendor: UInt16, product: UInt16)?, name: String) -> Bool {
+        if let info, info.vendor == 0x054C {
+            return info.product == 0x0CE6 || info.product == 0x0DF2
+        }
+        return name.lowercased().contains("dualsense")
+    }
 
     private static func isApple(vendorID: UInt16) -> Bool {
         // Apple's Bluetooth SIG and USB vendor IDs
