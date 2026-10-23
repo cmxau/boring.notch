@@ -65,6 +65,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var screenLockedObserver: Any?
     private var screenUnlockedObserver: Any?
     private var isScreenLocked: Bool = false
+    private var helloAnimationPending: Bool = false
+    private var sessionDidBecomeActiveObserver: Any?
     private var windowScreenDidChangeObserver: Any?
     private var dragDetectors: [String: DragDetector] = [:] // UUID -> DragDetector
 
@@ -81,6 +83,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let observer = screenUnlockedObserver {
             DistributedNotificationCenter.default().removeObserver(observer)
             screenUnlockedObserver = nil
+        }
+        if let observer = sessionDidBecomeActiveObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            sessionDidBecomeActiveObserver = nil
         }
         MusicManager.shared.destroy()
         cleanupDragDetectors()
@@ -106,6 +112,77 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             disableSkyLightOnAllWindows()
         }
+        playPendingHelloAnimation(settleDelay: 0.5)
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        // Opening the app again (Finder, Spotlight, Launchpad) while it's already running greets the user too
+        if Defaults[.showHelloAnimationOnLaunch] && !helloAnimationPending && !coordinator.helloAnimationRunning {
+            coordinator.helloAnimationRunning = true
+        }
+        return true
+    }
+
+    /// Plays the hello animation once the user can actually see the desktop.
+    /// When launched at login, the app can start before the desktop has appeared (or while the session is
+    /// locked or switched out), so the animation waits for an unlocked, on-console session and gives the
+    /// desktop a moment to fade in.
+    @MainActor
+    private func playPendingHelloAnimation(settleDelay: TimeInterval = 0) {
+        guard helloAnimationPending, isUserAtDesktop() else { return }
+        helloAnimationPending = false
+
+        var delay = settleDelay
+        if launchedRightAfterLogin() {
+            delay = max(delay, 2.5)
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(delay))
+            self.coordinator.helloAnimationRunning = true
+        }
+    }
+
+    private func isUserAtDesktop() -> Bool {
+        guard !isScreenLocked else { return false }
+        guard let session = CGSessionCopyCurrentDictionary() as? [String: Any] else { return true }
+        let onConsole = session["kCGSSessionOnConsoleKey"] as? Bool ?? true
+        let locked = session["CGSSessionScreenIsLocked"] as? Bool ?? false
+        return onConsole && !locked
+    }
+
+    private func launchedRightAfterLogin() -> Bool {
+        if let loginDate = consoleLoginDate() {
+            return Date().timeIntervalSince(loginDate) < 60
+        }
+        // The login record can be unavailable (e.g. inside the sandbox), so fall back to a launch shortly after boot
+        return ProcessInfo.processInfo.systemUptime < 180
+    }
+
+    /// When the current user logged in on the console, used to tell a launch at login apart from a manual launch.
+    private func consoleLoginDate() -> Date? {
+        let user = NSUserName()
+        var latest: Date?
+
+        setutxent()
+        defer { endutxent() }
+        while let entry = getutxent() {
+            guard Int32(entry.pointee.ut_type) == USER_PROCESS else { continue }
+            let line = withUnsafeBytes(of: entry.pointee.ut_line) {
+                String(decoding: $0.prefix(while: { $0 != 0 }), as: UTF8.self)
+            }
+            let name = withUnsafeBytes(of: entry.pointee.ut_user) {
+                String(decoding: $0.prefix(while: { $0 != 0 }), as: UTF8.self)
+            }
+            guard line == "console", name == user else { continue }
+
+            let time = entry.pointee.ut_tv
+            let date = Date(timeIntervalSince1970: TimeInterval(time.tv_sec) + TimeInterval(time.tv_usec) / 1_000_000)
+            if latest.map({ date > $0 }) ?? true {
+                latest = date
+            }
+        }
+        return latest
     }
     
     @MainActor
@@ -351,6 +428,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
         }
 
+        sessionDidBecomeActiveObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.sessionDidBecomeActiveNotification,
+            object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in
+                    self?.playPendingHelloAnimation(settleDelay: 0.5)
+                }
+        }
+
         KeyboardShortcuts.onKeyDown(for: .toggleSneakPeek) { [weak self] in
             guard let self = self else { return }
             if Defaults[.sneakPeekStyles] == .inline {
@@ -436,6 +521,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         previousScreens = NSScreen.screens
+
+        helloAnimationPending = coordinator.firstLaunch || Defaults[.showHelloAnimationOnLaunch]
+        playPendingHelloAnimation()
     }
 
     func playWelcomeSound() {

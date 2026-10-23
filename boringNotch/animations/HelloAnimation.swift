@@ -121,32 +121,41 @@ struct HelloAnimation: View {
         .opacity(opacity)
         .accessibilityLabel("hello")
         .task {
-            // Wait for the "opening" animation (notch expansion) to complete before writing
-            try? await Task.sleep(for: .seconds(0.6))
-
-            let scale = durationScale
-            withAnimation(.easeInOut(duration: 0.8 * scale)) {
-                h1Progress = 1
+            // The notch window can be torn down and rebuilt mid-animation (e.g. displays settling right
+            // after login). Bail out without finishing so the fresh window plays the animation again.
+            do {
+                try await play()
+            } catch {
+                return
             }
-            withAnimation(.easeOut(duration: 0.4)) {
-                h1Opacity = 1
-            }
-            withAnimation(.easeInOut(duration: 2.8 * scale).delay(0.7 * scale)) {
-                elloProgress = 1
-            }
-            withAnimation(.easeOut(duration: 0.7).delay(0.7 * scale)) {
-                elloOpacity = 1
-            }
-
-            // Let the finished word linger for a moment, then fade it out
-            try? await Task.sleep(for: .seconds(3.5 * scale + 0.8))
-            withAnimation(.easeInOut(duration: 0.5)) {
-                opacity = 0
-            }
-            try? await Task.sleep(for: .seconds(0.5))
-
             onFinish()
         }
+    }
+
+    private func play() async throws {
+        // Wait for the "opening" animation (notch expansion) to complete before writing
+        try await Task.sleep(for: .seconds(0.6))
+
+        let scale = durationScale
+        withAnimation(.easeInOut(duration: 0.8 * scale)) {
+            h1Progress = 1
+        }
+        withAnimation(.easeOut(duration: 0.4)) {
+            h1Opacity = 1
+        }
+        withAnimation(.easeInOut(duration: 2.8 * scale).delay(0.7 * scale)) {
+            elloProgress = 1
+        }
+        withAnimation(.easeOut(duration: 0.7).delay(0.7 * scale)) {
+            elloOpacity = 1
+        }
+
+        // Let the finished word linger for a moment, then fade it out
+        try await Task.sleep(for: .seconds(3.5 * scale + 0.8))
+        withAnimation(.easeInOut(duration: 0.5)) {
+            opacity = 0
+        }
+        try await Task.sleep(for: .seconds(0.5))
     }
 }
 
