@@ -58,10 +58,21 @@ struct ContentView: View {
         )
     }
 
+    /// On the lock screen only the padlock is shown, unless the user opted into the full notch there.
+    private var isLockScreenRestricted: Bool {
+        coordinator.lockScreenIndicator == .locked && !Defaults[.showOnLockScreen]
+    }
+
+    private var lockIndicatorSlotSize: CGFloat {
+        max(0, vm.effectiveClosedNotchHeight - 12)
+    }
+
     private var computedChinWidth: CGFloat {
         var chinWidth: CGFloat = vm.closedNotchSize.width
 
-        if coordinator.expandingView.type == .battery && coordinator.expandingView.show
+        if coordinator.lockScreenIndicator != .hidden && vm.notchState == .closed {
+            chinWidth += (2 * lockIndicatorSlotSize + 20)
+        } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
             && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
         {
             chinWidth = 640
@@ -257,7 +268,9 @@ struct ContentView: View {
                     .padding(.top, 40)
                     Spacer()
                 } else {
-                    if coordinator.expandingView.type == .battery && coordinator.expandingView.show
+                    if coordinator.lockScreenIndicator != .hidden && vm.notchState == .closed {
+                        LockIndicatorActivity()
+                    } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
                         && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
                     {
                         HStack(spacing: 0) {
@@ -300,7 +313,7 @@ struct ContentView: View {
                            Rectangle().fill(.clear).frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
                        }
 
-                      if coordinator.sneakPeek.show {
+                      if coordinator.sneakPeek.show && !isLockScreenRestricted {
                           if (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && !Defaults[.inlineHUD] && vm.notchState == .closed {
                               SystemEventIndicatorModifier(
                                   eventType: $coordinator.sneakPeek.type,
@@ -362,6 +375,27 @@ struct ContentView: View {
             }
         }
         .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], delegate: GeneralDropTargetDelegate(isTargeted: $vm.generalDropTargeting))
+    }
+
+    @ViewBuilder
+    func LockIndicatorActivity() -> some View {
+        HStack {
+            LockScreenAnimation(
+                isUnlocked: coordinator.lockScreenIndicator == .unlocked,
+                size: lockIndicatorSlotSize * 1.25
+            )
+            .frame(width: lockIndicatorSlotSize, height: lockIndicatorSlotSize)
+
+            Rectangle()
+                .fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            // Mirrors the padlock's width so the notch stays centred under the camera
+            Rectangle()
+                .fill(.clear)
+                .frame(width: lockIndicatorSlotSize, height: lockIndicatorSlotSize)
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
     }
 
     @ViewBuilder
@@ -503,6 +537,7 @@ struct ContentView: View {
     }
 
     private func doOpen() {
+        if isLockScreenRestricted { return }
         withAnimation(animationSpring) {
             vm.open()
         }
@@ -511,7 +546,7 @@ struct ContentView: View {
     // MARK: - Hover Management
 
     private func handleHover(_ hovering: Bool) {
-        if coordinator.firstLaunch || coordinator.helloAnimationRunning { return }
+        if coordinator.firstLaunch || coordinator.helloAnimationRunning || isLockScreenRestricted { return }
         hoverTask?.cancel()
         
         if hovering {

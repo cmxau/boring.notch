@@ -66,6 +66,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var screenUnlockedObserver: Any?
     private var isScreenLocked: Bool = false
     private var helloAnimationPending: Bool = false
+    private var keepsWindowsOnLockScreen: Bool = false
+    private var lockIndicatorHideTask: Task<Void, Never>?
     private var sessionDidBecomeActiveObserver: Any?
     private var windowScreenDidChangeObserver: Any?
     private var dragDetectors: [String: DragDetector] = [:] // UUID -> DragDetector
@@ -97,22 +99,61 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     func onScreenLocked(_ notification: Notification) {
         isScreenLocked = true
-        if !Defaults[.showOnLockScreen] {
+        // The padlock needs the notch window on the lock screen, even when the full notch isn't shown there
+        keepsWindowsOnLockScreen = Defaults[.showOnLockScreen] || Defaults[.showLockScreenAnimation]
+        if !keepsWindowsOnLockScreen {
             cleanupWindows()
         } else {
             enableSkyLightOnAllWindows()
+        }
+
+        if Defaults[.showLockScreenAnimation] {
+            showLockIndicator()
         }
     }
 
     @MainActor
     func onScreenUnlocked(_ notification: Notification) {
         isScreenLocked = false
-        if !Defaults[.showOnLockScreen] {
+        if !keepsWindowsOnLockScreen {
             adjustWindowPosition(changeAlpha: true)
         } else {
             disableSkyLightOnAllWindows()
         }
+
+        if coordinator.lockScreenIndicator == .locked {
+            showUnlockIndicator()
+        }
         playPendingHelloAnimation(settleDelay: 0.5)
+    }
+
+    /// Shows the closed padlock beside the notch for as long as the screen stays locked.
+    @MainActor
+    private func showLockIndicator() {
+        lockIndicatorHideTask?.cancel()
+        lockIndicatorHideTask = nil
+
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.8)) {
+            vm.close()
+            viewModels.values.forEach { $0.close() }
+            coordinator.lockScreenIndicator = .locked
+        }
+    }
+
+    /// Pops the padlock open, keeps it on screen for 3 seconds, then tucks it away.
+    @MainActor
+    private func showUnlockIndicator() {
+        lockIndicatorHideTask?.cancel()
+        coordinator.lockScreenIndicator = .unlocked
+
+        lockIndicatorHideTask = Task { @MainActor in
+            // The opening animation takes ~1s, then the open padlock stays up for 3s
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled else { return }
+            withAnimation(.spring(response: 0.45, dampingFraction: 1.0)) {
+                self.coordinator.lockScreenIndicator = .hidden
+            }
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

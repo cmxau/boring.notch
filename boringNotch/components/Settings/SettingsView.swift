@@ -1625,6 +1625,9 @@ struct Advanced: View {
                 Defaults.Toggle(key: .showOnLockScreen) {
                     Text("Show notch on lock screen")
                 }
+                Defaults.Toggle(key: .showLockScreenAnimation) {
+                    Text("Show lock and unlock animation")
+                }
                 Defaults.Toggle(key: .hideFromScreenRecording) {
                     Text("Hide from screen recording")
                 }
