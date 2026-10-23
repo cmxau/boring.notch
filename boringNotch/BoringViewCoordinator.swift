@@ -52,6 +52,9 @@ class BoringViewCoordinator: ObservableObject {
 
     @Published var currentView: NotchViews = .home
     @Published var helloAnimationRunning: Bool = false
+    @Published var lockScreenIndicator: LockScreenIndicatorState = .hidden
+    @Published var accessoryIndicator: ConnectedAccessory?
+    private var accessoryIndicatorTask: Task<Void, Never>?
     private var sneakPeekDispatch: DispatchWorkItem?
     private var expandingViewDispatch: DispatchWorkItem?
     private var hudEnableTask: Task<Void, Never>?
@@ -162,8 +165,6 @@ class BoringViewCoordinator: ObservableObject {
             }
 
         Task { @MainActor in
-            helloAnimationRunning = firstLaunch
-
             if Defaults[.hudReplacement] {
                 let authorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
                 if !authorized {
@@ -255,6 +256,22 @@ class BoringViewCoordinator: ObservableObject {
                 scheduleSneakPeekHide(after: sneakPeekDuration)
             } else {
                 sneakPeekTask?.cancel()
+            }
+        }
+    }
+
+    /// Shows the accessory beside the notch with "Connected" on the other side, then hides it again.
+    func showAccessoryConnected(_ accessory: ConnectedAccessory) {
+        accessoryIndicatorTask?.cancel()
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.8)) {
+            accessoryIndicator = accessory
+        }
+
+        accessoryIndicatorTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled else { return }
+            withAnimation(.spring(response: 0.45, dampingFraction: 1.0)) {
+                self?.accessoryIndicator = nil
             }
         }
     }

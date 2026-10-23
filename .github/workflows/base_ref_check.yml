@@ -9,7 +9,8 @@ permissions: {}
 jobs:
   validate:
     name: Fork PR target check
-    if: ${{ github.event.pull_request.head.repo.fork == true }}
+    # Only PRs from another repository; a fork's own branches may target its main
+    if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read

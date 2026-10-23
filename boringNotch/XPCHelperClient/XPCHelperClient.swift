@@ -20,7 +20,7 @@ final class XPCHelperClient: NSObject {
     // MARK: - Connection Management (Main Actor Isolated)
     
     @MainActor
-    private func ensureRemoteService() -> RemoteXPCService<BoringNotchXPCHelperProtocol> {
+    func ensureRemoteService() -> RemoteXPCService<BoringNotchXPCHelperProtocol> {
         if let existing = remoteService {
             return existing
         }

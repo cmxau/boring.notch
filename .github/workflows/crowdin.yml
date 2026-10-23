@@ -3,6 +3,13 @@ name: Crowdin Sync
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   crowdin:
     runs-on: ubuntu-latest
+    steps:
+      # Upstream's translation sync needs Crowdin credentials that aren't set up here
+      - name: Crowdin sync isn't configured
+        run: echo "Crowdin sync isn't configured for this repository."

@@ -51,6 +51,9 @@ struct SettingsView: View {
                 NavigationLink(value: "Shelf") {
                     Label("Shelf", systemImage: "books.vertical")
                 }
+                NavigationLink(value: "Agents") {
+                    Label("Agents", systemImage: "sparkles")
+                }
                 NavigationLink(value: "Shortcuts") {
                     Label("Shortcuts", systemImage: "keyboard")
                 }
@@ -85,6 +88,8 @@ struct SettingsView: View {
                     Charge()
                 case "Shelf":
                     Shelf()
+                case "Agents":
+                    AgentsSettings()
                 case "Shortcuts":
                     Shortcuts()
                 case "Extensions":
@@ -326,6 +331,9 @@ struct GeneralSettings: View {
             }
             Defaults.Toggle(key: .enableHaptics) {
                     Text("Enable haptic feedback")
+            }
+            Defaults.Toggle(key: .showHelloAnimationOnLaunch) {
+                Text("Show hello animation on launch")
             }
             Toggle("Remember last tab", isOn: $coordinator.openLastTabByDefault)
             if openNotchOnHover {
@@ -1621,6 +1629,15 @@ struct Advanced: View {
                 }
                 Defaults.Toggle(key: .showOnLockScreen) {
                     Text("Show notch on lock screen")
+                }
+                Defaults.Toggle(key: .showLockScreenAnimation) {
+                    Text("Show lock and unlock animation")
+                }
+                Defaults.Toggle(key: .playLockScreenSounds) {
+                    Text("Play lock and unlock sounds")
+                }
+                Defaults.Toggle(key: .showAccessoryConnectedIndicator) {
+                    Text("Show when accessories connect")
                 }
                 Defaults.Toggle(key: .hideFromScreenRecording) {
                     Text("Hide from screen recording")

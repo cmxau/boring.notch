@@ -23,6 +23,7 @@ struct ContentView: View {
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var brightnessManager = BrightnessManager.shared
     @ObservedObject var volumeManager = VolumeManager.shared
+    @ObservedObject var agentHub = AgentHub.shared
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
     @State private var anyDropDebounceTask: Task<Void, Never>?
@@ -58,10 +59,57 @@ struct ContentView: View {
         )
     }
 
+    /// On the lock screen only the padlock is shown, unless the user opted into the full notch there.
+    private var isLockScreenRestricted: Bool {
+        coordinator.lockScreenIndicator == .locked && !Defaults[.showOnLockScreen]
+    }
+
+    private var lockIndicatorSlotSize: CGFloat {
+        max(0, vm.effectiveClosedNotchHeight - 12)
+    }
+
+    private var accessoryArtworkSize: CGFloat {
+        max(0, vm.effectiveClosedNotchHeight - 4)
+    }
+
+    /// Both sides of the accessory indicator share this width so the notch stays centred under the camera.
+    private var accessoryWingWidth: CGFloat {
+        max(accessoryArtworkSize, 66)
+    }
+
+    /// What the closed notch shows for AI agents, if anything.
+    private var agentActivity: (kind: AgentKind, status: AgentStatus, label: String)? {
+        guard Defaults[.agentShowInClosedNotch], Defaults[.agentIntegrationEnabled] else { return nil }
+        if let request = agentHub.requests.first {
+            return (request.agent, .waitingForApproval, "Needs you")
+        }
+        if let waiting = agentHub.activeSessions.first(where: { $0.status.needsAttention }) {
+            return (waiting.kind, waiting.status, "Needs you")
+        }
+        if let finished = agentHub.recentlyFinished {
+            return (finished.kind, .finished, "Done")
+        }
+        let working = agentHub.activeSessions
+        guard let first = working.first else { return nil }
+        return (first.kind, .working, working.count > 1 ? "\(working.count) working" : "Working")
+    }
+
+    /// Agents waiting on the user, or just finished, take priority over other closed-notch activities.
+    private var agentActivityIsUrgent: Bool {
+        guard let status = agentActivity?.status else { return false }
+        return status != .working
+    }
+
     private var computedChinWidth: CGFloat {
         var chinWidth: CGFloat = vm.closedNotchSize.width
 
-        if coordinator.expandingView.type == .battery && coordinator.expandingView.show
+        if coordinator.lockScreenIndicator != .hidden && vm.notchState == .closed {
+            chinWidth += (2 * lockIndicatorSlotSize + 20)
+        } else if coordinator.accessoryIndicator != nil && vm.notchState == .closed {
+            chinWidth += (2 * accessoryWingWidth + 20)
+        } else if agentActivityIsUrgent && vm.notchState == .closed {
+            chinWidth += (2 * accessoryWingWidth + 20)
+        } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
             && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
         {
             chinWidth = 640
@@ -70,6 +118,8 @@ struct ContentView: View {
             && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
+        } else if agentActivity != nil && vm.notchState == .closed && !vm.hideOnClosed {
+            chinWidth += (2 * accessoryWingWidth + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
             && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace]
             && !vm.hideOnClosed
@@ -257,7 +307,13 @@ struct ContentView: View {
                     .padding(.top, 40)
                     Spacer()
                 } else {
-                    if coordinator.expandingView.type == .battery && coordinator.expandingView.show
+                    if coordinator.lockScreenIndicator != .hidden && vm.notchState == .closed {
+                        LockIndicatorActivity()
+                    } else if let accessory = coordinator.accessoryIndicator, vm.notchState == .closed {
+                        AccessoryConnectedActivity(accessory)
+                    } else if agentActivityIsUrgent, let activity = agentActivity, vm.notchState == .closed {
+                        AgentLiveActivity(activity)
+                    } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
                         && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
                     {
                         HStack(spacing: 0) {
@@ -290,6 +346,8 @@ struct ContentView: View {
                       } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle) && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
                           MusicLiveActivity()
                               .frame(alignment: .center)
+                      } else if let activity = agentActivity, vm.notchState == .closed && !vm.hideOnClosed {
+                          AgentLiveActivity(activity)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
                           BoringFaceAnimation()
                        } else if vm.notchState == .open {
@@ -300,7 +358,7 @@ struct ContentView: View {
                            Rectangle().fill(.clear).frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
                        }
 
-                      if coordinator.sneakPeek.show {
+                      if coordinator.sneakPeek.show && !isLockScreenRestricted {
                           if (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && !Defaults[.inlineHUD] && vm.notchState == .closed {
                               SystemEventIndicatorModifier(
                                   eventType: $coordinator.sneakPeek.type,
@@ -349,6 +407,8 @@ struct ContentView: View {
                         NotchHomeView(albumArtNamespace: albumArtNamespace)
                     case .shelf:
                         ShelfView()
+                    case .agents:
+                        AgentsView()
                     }
                 }
                 .transition(
@@ -362,6 +422,73 @@ struct ContentView: View {
             }
         }
         .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], delegate: GeneralDropTargetDelegate(isTargeted: $vm.generalDropTargeting))
+    }
+
+    @ViewBuilder
+    func LockIndicatorActivity() -> some View {
+        HStack {
+            LockScreenAnimation(
+                isUnlocked: coordinator.lockScreenIndicator == .unlocked,
+                size: lockIndicatorSlotSize * 1.25
+            )
+            .frame(width: lockIndicatorSlotSize, height: lockIndicatorSlotSize)
+
+            Rectangle()
+                .fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            // Mirrors the padlock's width so the notch stays centred under the camera
+            Rectangle()
+                .fill(.clear)
+                .frame(width: lockIndicatorSlotSize, height: lockIndicatorSlotSize)
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+    }
+
+    @ViewBuilder
+    func AccessoryConnectedActivity(_ accessory: ConnectedAccessory) -> some View {
+        HStack {
+            AccessoryArtworkView(artwork: accessory.artwork, size: accessoryArtworkSize)
+                .id(accessory.id)
+                .frame(width: accessoryWingWidth, alignment: .leading)
+
+            Rectangle()
+                .fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            Text("Connected")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .fixedSize()
+                .frame(width: accessoryWingWidth, alignment: .trailing)
+                .transition(.opacity)
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(accessory.name) connected")
+    }
+
+    @ViewBuilder
+    func AgentLiveActivity(_ activity: (kind: AgentKind, status: AgentStatus, label: String)) -> some View {
+        HStack {
+            AgentStatusIcon(kind: activity.kind, status: activity.status, size: max(0, vm.effectiveClosedNotchHeight - 12))
+                .frame(width: accessoryWingWidth, alignment: .leading)
+
+            Rectangle()
+                .fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            Text(activity.label)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(activity.status.tint)
+                .lineLimit(1)
+                .fixedSize()
+                .frame(width: accessoryWingWidth, alignment: .trailing)
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(activity.kind.displayName): \(activity.label)")
     }
 
     @ViewBuilder
@@ -503,6 +630,11 @@ struct ContentView: View {
     }
 
     private func doOpen() {
+        if isLockScreenRestricted { return }
+        // Tapping the notch while an agent is waiting goes straight to what it's waiting for
+        if agentActivityIsUrgent {
+            coordinator.currentView = .agents
+        }
         withAnimation(animationSpring) {
             vm.open()
         }
@@ -511,7 +643,7 @@ struct ContentView: View {
     // MARK: - Hover Management
 
     private func handleHover(_ hovering: Bool) {
-        if coordinator.firstLaunch { return }
+        if coordinator.firstLaunch || coordinator.helloAnimationRunning || isLockScreenRestricted { return }
         hoverTask?.cancel()
         
         if hovering {

@@ -65,6 +65,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var screenLockedObserver: Any?
     private var screenUnlockedObserver: Any?
     private var isScreenLocked: Bool = false
+    private var helloAnimationPending: Bool = false
+    private var keepsWindowsOnLockScreen: Bool = false
+    private var lockIndicatorHideTask: Task<Void, Never>?
+    private var sessionDidBecomeActiveObserver: Any?
+    /// The notch that was opened because an agent needed the user, so it can close again once they've answered.
+    private weak var agentOpenedViewModel: BoringViewModel?
     private var windowScreenDidChangeObserver: Any?
     private var dragDetectors: [String: DragDetector] = [:] // UUID -> DragDetector
 
@@ -82,6 +88,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             DistributedNotificationCenter.default().removeObserver(observer)
             screenUnlockedObserver = nil
         }
+        if let observer = sessionDidBecomeActiveObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            sessionDidBecomeActiveObserver = nil
+        }
         MusicManager.shared.destroy()
         cleanupDragDetectors()
         cleanupWindows()
@@ -91,21 +101,171 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     func onScreenLocked(_ notification: Notification) {
         isScreenLocked = true
-        if !Defaults[.showOnLockScreen] {
+        // The padlock needs the notch window on the lock screen, even when the full notch isn't shown there
+        keepsWindowsOnLockScreen = Defaults[.showOnLockScreen] || Defaults[.showLockScreenAnimation]
+        if !keepsWindowsOnLockScreen {
             cleanupWindows()
         } else {
             enableSkyLightOnAllWindows()
+        }
+
+        if Defaults[.showLockScreenAnimation] {
+            showLockIndicator()
         }
     }
 
     @MainActor
     func onScreenUnlocked(_ notification: Notification) {
         isScreenLocked = false
-        if !Defaults[.showOnLockScreen] {
+        if !keepsWindowsOnLockScreen {
             adjustWindowPosition(changeAlpha: true)
         } else {
             disableSkyLightOnAllWindows()
         }
+
+        if coordinator.lockScreenIndicator == .locked {
+            showUnlockIndicator()
+        }
+        playPendingHelloAnimation(settleDelay: 0.5)
+    }
+
+    /// Opens the notch on the Agents tab when an agent is waiting for a decision.
+    @MainActor
+    private func openNotchForAgent() {
+        guard Defaults[.agentOpenNotchOnRequest], !isScreenLocked, !coordinator.helloAnimationRunning else { return }
+
+        var viewModel = vm
+        if Defaults[.showOnAllDisplays],
+           let uuid = (NSScreen.main ?? NSScreen.screens.first)?.displayUUID,
+           let screenViewModel = viewModels[uuid] {
+            viewModel = screenViewModel
+        }
+
+        coordinator.currentView = .agents
+        guard viewModel.notchState == .closed else { return }
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.8)) {
+            viewModel.open()
+        }
+        agentOpenedViewModel = viewModel
+    }
+
+    /// Closes the notch the agent opened, unless the pointer is over it.
+    @MainActor
+    private func closeNotchAfterAgent() {
+        guard let viewModel = agentOpenedViewModel else { return }
+        agentOpenedViewModel = nil
+        guard viewModel.notchState == .open else { return }
+
+        let windowFrame = (Defaults[.showOnAllDisplays] ? windows[viewModel.screenUUID ?? ""] : window)?.frame
+        if let windowFrame, windowFrame.contains(NSEvent.mouseLocation) { return }
+        withAnimation(.spring(response: 0.45, dampingFraction: 1.0)) {
+            viewModel.close()
+        }
+    }
+
+    /// Shows the closed padlock beside the notch for as long as the screen stays locked.
+    @MainActor
+    private func showLockIndicator() {
+        lockIndicatorHideTask?.cancel()
+        lockIndicatorHideTask = nil
+
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.8)) {
+            vm.close()
+            viewModels.values.forEach { $0.close() }
+            coordinator.lockScreenIndicator = .locked
+        }
+        LockScreenSounds.play(.lock)
+    }
+
+    /// Pops the padlock open, keeps it on screen for 3 seconds, then tucks it away.
+    @MainActor
+    private func showUnlockIndicator() {
+        lockIndicatorHideTask?.cancel()
+        coordinator.lockScreenIndicator = .unlocked
+
+        lockIndicatorHideTask = Task { @MainActor in
+            // Click as the shackle starts to lift (the animation first waits 0.12 s for the lock screen to fade)
+            try? await Task.sleep(for: .milliseconds(120))
+            guard !Task.isCancelled else { return }
+            LockScreenSounds.play(.unlock)
+
+            // The opening animation takes ~1s, then the open padlock stays up for 3s
+            try? await Task.sleep(for: .milliseconds(3880))
+            guard !Task.isCancelled else { return }
+            withAnimation(.spring(response: 0.45, dampingFraction: 1.0)) {
+                self.coordinator.lockScreenIndicator = .hidden
+            }
+        }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        // Opening the app again (Finder, Spotlight, Launchpad) while it's already running greets the user too
+        if Defaults[.showHelloAnimationOnLaunch] && !helloAnimationPending && !coordinator.helloAnimationRunning {
+            coordinator.helloAnimationRunning = true
+        }
+        return true
+    }
+
+    /// Plays the hello animation once the user can actually see the desktop.
+    /// When launched at login, the app can start before the desktop has appeared (or while the session is
+    /// locked or switched out), so the animation waits for an unlocked, on-console session and gives the
+    /// desktop a moment to fade in.
+    @MainActor
+    private func playPendingHelloAnimation(settleDelay: TimeInterval = 0) {
+        guard helloAnimationPending, isUserAtDesktop() else { return }
+        helloAnimationPending = false
+
+        var delay = settleDelay
+        if launchedRightAfterLogin() {
+            delay = max(delay, 2.5)
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(delay))
+            self.coordinator.helloAnimationRunning = true
+        }
+    }
+
+    private func isUserAtDesktop() -> Bool {
+        guard !isScreenLocked else { return false }
+        guard let session = CGSessionCopyCurrentDictionary() as? [String: Any] else { return true }
+        let onConsole = session["kCGSSessionOnConsoleKey"] as? Bool ?? true
+        let locked = session["CGSSessionScreenIsLocked"] as? Bool ?? false
+        return onConsole && !locked
+    }
+
+    private func launchedRightAfterLogin() -> Bool {
+        if let loginDate = consoleLoginDate() {
+            return Date().timeIntervalSince(loginDate) < 60
+        }
+        // The login record can be unavailable (e.g. inside the sandbox), so fall back to a launch shortly after boot
+        return ProcessInfo.processInfo.systemUptime < 180
+    }
+
+    /// When the current user logged in on the console, used to tell a launch at login apart from a manual launch.
+    private func consoleLoginDate() -> Date? {
+        let user = NSUserName()
+        var latest: Date?
+
+        setutxent()
+        defer { endutxent() }
+        while let entry = getutxent() {
+            guard Int32(entry.pointee.ut_type) == USER_PROCESS else { continue }
+            let line = withUnsafeBytes(of: entry.pointee.ut_line) {
+                String(decoding: $0.prefix(while: { $0 != 0 }), as: UTF8.self)
+            }
+            let name = withUnsafeBytes(of: entry.pointee.ut_user) {
+                String(decoding: $0.prefix(while: { $0 != 0 }), as: UTF8.self)
+            }
+            guard line == "console", name == user else { continue }
+
+            let time = entry.pointee.ut_tv
+            let date = Date(timeIntervalSince1970: TimeInterval(time.tv_sec) + TimeInterval(time.tv_usec) / 1_000_000)
+            if latest.map({ date > $0 }) ?? true {
+                latest = date
+            }
+        }
+        return latest
     }
     
     @MainActor
@@ -351,6 +511,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
         }
 
+        sessionDidBecomeActiveObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.sessionDidBecomeActiveNotification,
+            object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in
+                    self?.playPendingHelloAnimation(settleDelay: 0.5)
+                }
+        }
+
         KeyboardShortcuts.onKeyDown(for: .toggleSneakPeek) { [weak self] in
             guard let self = self else { return }
             if Defaults[.sneakPeekStyles] == .inline {
@@ -421,6 +589,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         setupDragDetectors()
+        BluetoothAccessoryManager.shared.start()
+        AgentHub.shared.start()
+
+        NotificationCenter.default.addObserver(
+            forName: .agentNeedsAttention, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.openNotchForAgent() }
+        }
+        NotificationCenter.default.addObserver(
+            forName: .agentAttentionResolved, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.closeNotchAfterAgent() }
+        }
 
         if coordinator.firstLaunch {
             DispatchQueue.main.async {
@@ -436,6 +617,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         previousScreens = NSScreen.screens
+
+        helloAnimationPending = coordinator.firstLaunch || Defaults[.showHelloAnimationOnLaunch]
+        playPendingHelloAnimation()
     }
 
     func playWelcomeSound() {
