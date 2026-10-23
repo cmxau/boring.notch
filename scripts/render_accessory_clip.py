@@ -34,8 +34,8 @@ def parse_args():
     parser.add_argument("--fps", type=int, default=60)
     parser.add_argument("--seconds", type=float, default=6)
     parser.add_argument("--samples", type=int, default=48, help="Cycles samples per frame")
-    parser.add_argument("--fill", type=float, default=0.78, help="Share of the frame the model's widest extent fills")
-    parser.add_argument("--elevation", type=float, default=18, help="Camera angle above the horizon, in degrees")
+    parser.add_argument("--fill", type=float, default=0.92, help="Share of the frame the model's widest extent fills")
+    parser.add_argument("--elevation", type=float, default=22, help="Camera angle above the horizon, in degrees")
     parser.add_argument("--pitch", type=float, default=0, help="Tilt the model towards the camera, in degrees")
     parser.add_argument("--roll", type=float, default=0, help="Roll the model, in degrees")
     parser.add_argument("--yaw", type=float, default=0, help="Starting turn of the model, in degrees")
@@ -169,7 +169,7 @@ def add_lighting():
     black = nodes.new("ShaderNodeBackground")
     black.inputs["Color"].default_value = (0, 0, 0, 1)
     studio = nodes.new("ShaderNodeBackground")
-    studio.inputs["Strength"].default_value = 0.6
+    studio.inputs["Strength"].default_value = 0.35
     gradient = nodes.new("ShaderNodeTexGradient")
     ramp = nodes.new("ShaderNodeValToRGB")
     ramp.color_ramp.elements[0].color = (0.02, 0.02, 0.02, 1)
@@ -198,9 +198,9 @@ def add_lighting():
         light.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
 
     # Key light from the front left, a softer fill from the right, and a rim from behind
-    area_light("Key", (-3, -4, 4), 900, 3)
-    area_light("Fill", (4, -3, 1.5), 300, 4)
-    area_light("Rim", (0, 5, 3), 700, 3)
+    area_light("Key", (-3, -4, 4), 450, 3)
+    area_light("Fill", (4, -3, 1.5), 90, 4)
+    area_light("Rim", (0, 5, 3), 320, 3)
 
 
 def configure_render(args, frame_count, frames_dir):
@@ -213,7 +213,8 @@ def configure_render(args, frame_count, frames_dir):
     scene.render.resolution_y = args.size * args.supersample
     scene.render.resolution_percentage = 100
     scene.render.film_transparent = False
-    scene.view_settings.view_transform = "Standard"
+    # AgX rolls highlights off gently (white plastic keeps its shading) and keeps black at zero
+    scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "None"
     scene.render.fps = args.fps
     scene.frame_start = 0
