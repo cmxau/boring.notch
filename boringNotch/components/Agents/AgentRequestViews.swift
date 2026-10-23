@@ -20,7 +20,7 @@ struct AgentRequestCard: View {
 
             switch request.kind {
             case .permission(let tool, let detail):
-                PermissionRequestView(request: request, session: session, tool: tool, detail: detail)
+                AgentPermissionView(request: request, session: session, tool: tool, detail: detail)
             case .plan(let markdown):
                 PlanReviewView(request: request, session: session, markdown: markdown)
             case .questions(let questions):
@@ -30,7 +30,7 @@ struct AgentRequestCard: View {
     }
 }
 
-private struct PermissionRequestView: View {
+private struct AgentPermissionView: View {
     let request: AgentRequest
     let session: AgentSession?
     let tool: String
