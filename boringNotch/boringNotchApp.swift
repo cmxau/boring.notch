@@ -69,6 +69,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var keepsWindowsOnLockScreen: Bool = false
     private var lockIndicatorHideTask: Task<Void, Never>?
     private var sessionDidBecomeActiveObserver: Any?
+    /// The notch that was opened because an agent needed the user, so it can close again once they've answered.
+    private weak var agentOpenedViewModel: BoringViewModel?
     private var windowScreenDidChangeObserver: Any?
     private var dragDetectors: [String: DragDetector] = [:] // UUID -> DragDetector
 
@@ -125,6 +127,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showUnlockIndicator()
         }
         playPendingHelloAnimation(settleDelay: 0.5)
+    }
+
+    /// Opens the notch on the Agents tab when an agent is waiting for a decision.
+    @MainActor
+    private func openNotchForAgent() {
+        guard Defaults[.agentOpenNotchOnRequest], !isScreenLocked, !coordinator.helloAnimationRunning else { return }
+
+        var viewModel = vm
+        if Defaults[.showOnAllDisplays],
+           let uuid = (NSScreen.main ?? NSScreen.screens.first)?.displayUUID,
+           let screenViewModel = viewModels[uuid] {
+            viewModel = screenViewModel
+        }
+
+        coordinator.currentView = .agents
+        guard viewModel.notchState == .closed else { return }
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.8)) {
+            viewModel.open()
+        }
+        agentOpenedViewModel = viewModel
+    }
+
+    /// Closes the notch the agent opened, unless the pointer is over it.
+    @MainActor
+    private func closeNotchAfterAgent() {
+        guard let viewModel = agentOpenedViewModel else { return }
+        agentOpenedViewModel = nil
+        guard viewModel.notchState == .open else { return }
+
+        let windowFrame = (Defaults[.showOnAllDisplays] ? windows[viewModel.screenUUID ?? ""] : window)?.frame
+        if let windowFrame, windowFrame.contains(NSEvent.mouseLocation) { return }
+        withAnimation(.spring(response: 0.45, dampingFraction: 1.0)) {
+            viewModel.close()
+        }
     }
 
     /// Shows the closed padlock beside the notch for as long as the screen stays locked.
@@ -548,6 +584,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupDragDetectors()
         BluetoothAccessoryManager.shared.start()
+        AgentHub.shared.start()
+
+        NotificationCenter.default.addObserver(
+            forName: .agentNeedsAttention, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.openNotchForAgent() }
+        }
+        NotificationCenter.default.addObserver(
+            forName: .agentAttentionResolved, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.closeNotchAfterAgent() }
+        }
 
         if coordinator.firstLaunch {
             DispatchQueue.main.async {

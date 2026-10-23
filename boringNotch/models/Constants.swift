@@ -95,6 +95,18 @@ extension Defaults.Keys {
     static let showOnLockScreen = Key<Bool>("showOnLockScreen", default: false)
     static let showLockScreenAnimation = Key<Bool>("showLockScreenAnimation", default: true)
     static let showAccessoryConnectedIndicator = Key<Bool>("showAccessoryConnectedIndicator", default: true)
+    // MARK: AI agents
+    static let agentIntegrationEnabled = Key<Bool>("agentIntegrationEnabled", default: true)
+    /// Shared secret the hook bridge script sends, so only it can post agent events
+    static let agentBridgeToken = Key<String>("agentBridgeToken", default: "")
+    /// Agents the user disconnected, which aren't reconnected automatically
+    static let agentIntegrationsDisconnected = Key<[String]>("agentIntegrationsDisconnected", default: [])
+    /// Seconds before an unanswered request is handed back to the terminal; 0 waits indefinitely
+    static let agentDecisionTimeout = Key<Double>("agentDecisionTimeout", default: 300)
+    static let agentOpenNotchOnRequest = Key<Bool>("agentOpenNotchOnRequest", default: true)
+    static let agentShowInClosedNotch = Key<Bool>("agentShowInClosedNotch", default: true)
+    static let agentSoundsEnabled = Key<Bool>("agentSoundsEnabled", default: true)
+
     /// AirPods Max colour bytes seen in their BLE advertisements, by Bluetooth address
     static let airPodsMaxColorCodes = Key<[String: Int]>("airPodsMaxColorCodes", default: [:])
     static let hideFromScreenRecording = Key<Bool>("hideFromScreenRecording", default: false)

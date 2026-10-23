@@ -20,5 +20,10 @@ import Foundation
     func isScreenBrightnessAvailable(with reply: @escaping (Bool) -> Void)
     func currentScreenBrightness(with reply: @escaping (NSNumber?) -> Void)
     func setScreenBrightness(_ value: Float, with reply: @escaping (Bool) -> Void)
+    // AI agent integrations: hook settings in the user's home folder, which the sandboxed app can't reach.
+    // Paths are relative to the home folder and limited to the agents' own config files.
+    func agentFileExists(_ path: String, with reply: @escaping (Bool) -> Void)
+    func readAgentFile(_ path: String, with reply: @escaping (Data?) -> Void)
+    func writeAgentFile(_ path: String, contents: Data, executable: Bool, with reply: @escaping (String?) -> Void)
 }
 

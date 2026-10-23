@@ -241,6 +241,56 @@ final class XPCHelperClient: NSObject {
             return false
         }
     }
+
+    // MARK: - Agent integrations
+
+    nonisolated func agentFileExists(_ path: String) async -> Bool {
+        do {
+            let service = await MainActor.run {
+                ensureRemoteService()
+            }
+            return try await service.withContinuation { service, continuation in
+                service.agentFileExists(path) { exists in
+                    continuation.resume(returning: exists)
+                }
+            }
+        } catch {
+            return false
+        }
+    }
+
+    nonisolated func readAgentFile(_ path: String) async -> Data? {
+        do {
+            let service = await MainActor.run {
+                ensureRemoteService()
+            }
+            let result: Data? = try await service.withContinuation { service, continuation in
+                service.readAgentFile(path) { data in
+                    continuation.resume(returning: data)
+                }
+            }
+            return result
+        } catch {
+            return nil
+        }
+    }
+
+    /// Writes one of the agents' hook files. Returns an error message, or nil on success.
+    nonisolated func writeAgentFile(_ path: String, contents: Data, executable: Bool = false) async -> String? {
+        do {
+            let service = await MainActor.run {
+                ensureRemoteService()
+            }
+            let result: String? = try await service.withContinuation { service, continuation in
+                service.writeAgentFile(path, contents: contents, executable: executable) { error in
+                    continuation.resume(returning: error)
+                }
+            }
+            return result
+        } catch {
+            return error.localizedDescription
+        }
+    }
 }
 
 extension Notification.Name {

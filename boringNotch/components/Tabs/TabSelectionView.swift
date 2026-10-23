@@ -5,19 +5,26 @@
 //  Created by Hugo Persson on 2024-08-25.
 //
 
+import Defaults
 import SwiftUI
 
 struct TabModel: Identifiable {
-    let id = UUID()
+    var id: String { label }
     let label: String
     let icon: String
     let view: NotchViews
 }
 
-let tabs = [
-    TabModel(label: "Home", icon: "house.fill", view: .home),
-    TabModel(label: "Shelf", icon: "tray.fill", view: .shelf)
-]
+var tabs: [TabModel] {
+    var tabs = [TabModel(label: "Home", icon: "house.fill", view: .home)]
+    if Defaults[.boringShelf] {
+        tabs.append(TabModel(label: "Shelf", icon: "tray.fill", view: .shelf))
+    }
+    if Defaults[.agentIntegrationEnabled] {
+        tabs.append(TabModel(label: "Agents", icon: "sparkles", view: .agents))
+    }
+    return tabs
+}
 
 struct TabSelectionView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared

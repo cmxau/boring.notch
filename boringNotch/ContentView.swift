@@ -23,6 +23,7 @@ struct ContentView: View {
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var brightnessManager = BrightnessManager.shared
     @ObservedObject var volumeManager = VolumeManager.shared
+    @ObservedObject var agentHub = AgentHub.shared
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
     @State private var anyDropDebounceTask: Task<Void, Never>?
@@ -76,12 +77,37 @@ struct ContentView: View {
         max(accessoryArtworkSize, 66)
     }
 
+    /// What the closed notch shows for AI agents, if anything.
+    private var agentActivity: (kind: AgentKind, status: AgentStatus, label: String)? {
+        guard Defaults[.agentShowInClosedNotch], Defaults[.agentIntegrationEnabled] else { return nil }
+        if let request = agentHub.requests.first {
+            return (request.agent, .waitingForApproval, "Needs you")
+        }
+        if let waiting = agentHub.activeSessions.first(where: { $0.status.needsAttention }) {
+            return (waiting.kind, waiting.status, "Needs you")
+        }
+        if let finished = agentHub.recentlyFinished {
+            return (finished.kind, .finished, "Done")
+        }
+        let working = agentHub.activeSessions
+        guard let first = working.first else { return nil }
+        return (first.kind, .working, working.count > 1 ? "\(working.count) working" : "Working")
+    }
+
+    /// Agents waiting on the user, or just finished, take priority over other closed-notch activities.
+    private var agentActivityIsUrgent: Bool {
+        guard let status = agentActivity?.status else { return false }
+        return status != .working
+    }
+
     private var computedChinWidth: CGFloat {
         var chinWidth: CGFloat = vm.closedNotchSize.width
 
         if coordinator.lockScreenIndicator != .hidden && vm.notchState == .closed {
             chinWidth += (2 * lockIndicatorSlotSize + 20)
         } else if coordinator.accessoryIndicator != nil && vm.notchState == .closed {
+            chinWidth += (2 * accessoryWingWidth + 20)
+        } else if agentActivityIsUrgent && vm.notchState == .closed {
             chinWidth += (2 * accessoryWingWidth + 20)
         } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
             && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
@@ -92,6 +118,8 @@ struct ContentView: View {
             && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
+        } else if agentActivity != nil && vm.notchState == .closed && !vm.hideOnClosed {
+            chinWidth += (2 * accessoryWingWidth + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
             && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace]
             && !vm.hideOnClosed
@@ -283,6 +311,8 @@ struct ContentView: View {
                         LockIndicatorActivity()
                     } else if let accessory = coordinator.accessoryIndicator, vm.notchState == .closed {
                         AccessoryConnectedActivity(accessory)
+                    } else if agentActivityIsUrgent, let activity = agentActivity, vm.notchState == .closed {
+                        AgentLiveActivity(activity)
                     } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
                         && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
                     {
@@ -316,6 +346,8 @@ struct ContentView: View {
                       } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle) && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
                           MusicLiveActivity()
                               .frame(alignment: .center)
+                      } else if let activity = agentActivity, vm.notchState == .closed && !vm.hideOnClosed {
+                          AgentLiveActivity(activity)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
                           BoringFaceAnimation()
                        } else if vm.notchState == .open {
@@ -375,6 +407,8 @@ struct ContentView: View {
                         NotchHomeView(albumArtNamespace: albumArtNamespace)
                     case .shelf:
                         ShelfView()
+                    case .agents:
+                        AgentsView()
                     }
                 }
                 .transition(
@@ -433,6 +467,28 @@ struct ContentView: View {
         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(accessory.name) connected")
+    }
+
+    @ViewBuilder
+    func AgentLiveActivity(_ activity: (kind: AgentKind, status: AgentStatus, label: String)) -> some View {
+        HStack {
+            AgentStatusIcon(kind: activity.kind, status: activity.status, size: max(0, vm.effectiveClosedNotchHeight - 12))
+                .frame(width: accessoryWingWidth, alignment: .leading)
+
+            Rectangle()
+                .fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            Text(activity.label)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(activity.status.tint)
+                .lineLimit(1)
+                .fixedSize()
+                .frame(width: accessoryWingWidth, alignment: .trailing)
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(activity.kind.displayName): \(activity.label)")
     }
 
     @ViewBuilder
@@ -575,6 +631,10 @@ struct ContentView: View {
 
     private func doOpen() {
         if isLockScreenRestricted { return }
+        // Tapping the notch while an agent is waiting goes straight to what it's waiting for
+        if agentActivityIsUrgent {
+            coordinator.currentView = .agents
+        }
         withAnimation(animationSpring) {
             vm.open()
         }
