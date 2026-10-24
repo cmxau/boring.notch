@@ -190,7 +190,10 @@ class BoringViewModel: NSObject, ObservableObject {
     }
 
     func open() {
-        self.notchSize = openNotchSize
+        self.notchSize = CGSize(
+            width: openNotchWidth(closedNotchSize: closedNotchSize, closedNotchHeight: closedNotchSize.height),
+            height: openNotchSize.height
+        )
         self.notchState = .open
         
         // Force music information update when notch is opened

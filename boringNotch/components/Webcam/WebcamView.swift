@@ -93,6 +93,49 @@ struct CameraPreviewView: View {
     }
 }
 
+/// The mirror filling the open notch, in place of its usual contents. Clicking it, or closing the notch, puts
+/// the contents back.
+struct NotchMirrorView: View {
+    @EnvironmentObject var vm: BoringViewModel
+    @ObservedObject var webcamManager: WebcamManager
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: MusicPlayerImageSizes.cornerRadiusInset.opened)
+                .fill(Color(red: 20/255, green: 20/255, blue: 20/255))
+
+            if let previewLayer = webcamManager.previewLayer {
+                CameraPreviewLayerView(previewLayer: previewLayer)
+                    .scaleEffect(x: -1, y: 1)
+                    .opacity(webcamManager.isSessionRunning ? 1 : 0)
+            }
+
+            if !webcamManager.isSessionRunning {
+                Image(systemName: "web.camera")
+                    .font(.title)
+                    .foregroundStyle(.gray)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: MusicPlayerImageSizes.cornerRadiusInset.opened))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            vm.toggleCameraPreview()
+        }
+        .onDisappear {
+            // The mirror is temporary: the next time the notch opens it shows its contents again
+            if webcamManager.isSessionRunning {
+                webcamManager.stopSession()
+            }
+            vm.isCameraExpanded = false
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Mirror")
+        .accessibilityHint("Click to close the mirror")
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
 struct CameraPreviewLayerView: NSViewRepresentable {
     let previewLayer: AVCaptureVideoPreviewLayer
 

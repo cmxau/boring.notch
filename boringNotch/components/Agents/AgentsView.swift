@@ -14,23 +14,26 @@ struct AgentsView: View {
         if hub.sessions.isEmpty && hub.requests.isEmpty {
             EmptyStateView(message: "No agents running. Start Claude Code, Codex, Gemini CLI or Antigravity.")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let request = hub.requests.first {
+            // A request gets the whole notch so its buttons and details fit
+            AgentRequestCard(
+                request: request,
+                session: hub.sessions[request.sessionID],
+                pendingCount: hub.requests.count
+            )
+            .id(request.id)
+            .padding(.top, 4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         } else {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
-                    AgentSessionList(sessions: hub.orderedSessions, highlighted: hub.requests.first?.sessionID)
+                    AgentSessionList(sessions: hub.orderedSessions, highlighted: nil)
                     AgentUsageStrip()
                 }
-                .frame(width: 210)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
 
                 Group {
-                    if let request = hub.requests.first {
-                        AgentRequestCard(
-                            request: request,
-                            session: hub.sessions[request.sessionID],
-                            pendingCount: hub.requests.count
-                        )
-                        .id(request.id)
-                    } else if let session = hub.orderedSessions.first {
+                    if let session = hub.orderedSessions.first {
                         AgentSessionSummary(session: session)
                     }
                 }

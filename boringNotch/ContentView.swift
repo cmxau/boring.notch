@@ -89,6 +89,11 @@ struct ContentView: View {
         petSize * NotchPetClip.aspectRatio
     }
 
+    /// The mirror fills the open notch while it's on, hiding the notch's usual contents.
+    private var showsMirror: Bool {
+        Defaults[.showMirror] && webcamManager.cameraAvailable && vm.isCameraExpanded
+    }
+
     /// The pet keeps the closed notch company when nothing else is showing.
     private var showsPet: Bool {
         showNotchPet && !coordinator.expandingView.show && vm.notchState == .closed
@@ -170,6 +175,8 @@ struct ContentView: View {
                         : cornerRadiusInsets.closed.bottom
                     )
                     .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
+                    // The open notch is as wide as the closed notch playing music, plus room for the header
+                    .frame(width: vm.notchState == .open ? vm.notchSize.width : nil)
                     .background(.black)
                     .clipShape(currentNotchShape)
                     .overlay(alignment: .top) {
@@ -424,15 +431,21 @@ struct ContentView: View {
               .zIndex(2)
             if vm.notchState == .open {
                 VStack {
-                    switch coordinator.currentView {
-                    case .home:
-                        NotchHomeView(albumArtNamespace: albumArtNamespace)
-                    case .shelf:
-                        ShelfView()
-                    case .agents:
-                        AgentsView()
+                    if showsMirror {
+                        NotchMirrorView(webcamManager: webcamManager)
+                            .transition(.opacity)
+                    } else {
+                        switch coordinator.currentView {
+                        case .home:
+                            NotchHomeView(albumArtNamespace: albumArtNamespace)
+                        case .shelf:
+                            ShelfView()
+                        case .agents:
+                            AgentsView()
+                        }
                     }
                 }
+                .animation(.smooth(duration: 0.25), value: showsMirror)
                 .transition(
                     .scale(scale: 0.8, anchor: .top)
                     .combined(with: .opacity)

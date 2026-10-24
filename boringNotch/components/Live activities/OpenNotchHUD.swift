@@ -16,7 +16,16 @@ struct OpenNotchHUD: View {
     @Default(.showOpenNotchHUDPercentage) var showPercentage
     
     var body: some View {
-        HStack(spacing: 8) {
+        // The header beside the camera is narrow; drop the percentage, then shorten the slider, before overflowing
+        ViewThatFits(in: .horizontal) {
+            hud(sliderWidth: showPercentage ? 65 : 108, showsPercentage: showPercentage)
+            hud(sliderWidth: 60, showsPercentage: false)
+            hud(sliderWidth: 36, showsPercentage: false)
+        }
+    }
+
+    private func hud(sliderWidth: CGFloat, showsPercentage: Bool) -> some View {
+        HStack(spacing: 6) {
             // Icon
             Group {
                 switch type {
@@ -51,7 +60,7 @@ struct OpenNotchHUD: View {
                 DraggableProgressBar(value: $value, onChange: { newVal in
                      updateSystemValue(newVal)
                 })
-                .frame(width: showPercentage ? 65 : 108) // Fixed width for consistency
+                .frame(width: sliderWidth)
             } else {
                 Text(value > 0 ? "Unmuted" : "Muted")
                     .font(.system(size: 13, weight: .medium))
@@ -60,7 +69,7 @@ struct OpenNotchHUD: View {
             }
             
             // Percentage Text
-            if type != .mic && showPercentage {
+            if type != .mic && showsPercentage {
                 Text("\(Int(value * 100))%")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.gray)
@@ -68,7 +77,7 @@ struct OpenNotchHUD: View {
                     .frame(width: 35, alignment: .trailing)
             }
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(
             Capsule()

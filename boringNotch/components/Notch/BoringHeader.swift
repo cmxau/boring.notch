@@ -36,7 +36,7 @@ struct BoringHeader: View {
                     }
             }
 
-            HStack(spacing: 4) {
+            HStack(spacing: 2) {
                 if vm.notchState == .open {
                     if isHUDType(coordinator.sneakPeek.type) && coordinator.sneakPeek.show && Defaults[.showOpenNotchHUD] {
                         OpenNotchHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon)
@@ -48,7 +48,7 @@ struct BoringHeader: View {
                             }) {
                                 Capsule()
                                     .fill(.black)
-                                    .frame(width: 30, height: 30)
+                                    .frame(width: 24, height: 30)
                                     .overlay {
                                         Image(systemName: "web.camera")
                                             .foregroundColor(.white)
@@ -67,7 +67,7 @@ struct BoringHeader: View {
                             }) {
                                 Capsule()
                                     .fill(.black)
-                                    .frame(width: 30, height: 30)
+                                    .frame(width: 24, height: 30)
                                     .overlay {
                                         Image(systemName: "gear")
                                             .foregroundColor(.white)
@@ -86,7 +86,9 @@ struct BoringHeader: View {
                                 levelBattery: batteryModel.levelBattery,
                                 maxCapacity: batteryModel.maxCapacity,
                                 timeToFullCharge: batteryModel.timeToFullCharge,
-                                isForNotification: false
+                                isForNotification: false,
+                                // No room beside the camera; the battery menu shows it
+                                showsPercentage: false
                             )
                         }
                     }

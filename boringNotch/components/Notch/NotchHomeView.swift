@@ -12,14 +12,17 @@ import SwiftUI
 
 // MARK: - Music Player Components
 
+/// The home view's music half: album art beside the song, then the progress bar and controls underneath.
 struct MusicPlayerView: View {
     @EnvironmentObject var vm: BoringViewModel
     let albumArtNamespace: Namespace.ID
 
+    static let albumArtSize: CGFloat = 52
+
     var body: some View {
-        HStack {
-            AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace).padding(.all, 5)
-            MusicControlsView().drawingGroup().compositingGroup()
+        MusicControlsView {
+            AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace)
+                .frame(width: Self.albumArtSize, height: Self.albumArtSize)
         }
     }
 }
@@ -101,52 +104,55 @@ struct AlbumArtView: View {
             AppIcon(for: musicManager.bundleIdentifier ?? "com.apple.Music")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: 30, height: 30)
-                .offset(x: 10, y: 10)
+                .frame(width: 20, height: 20)
+                .offset(x: 6, y: 6)
                 .transition(.scale.combined(with: .opacity))
                 .zIndex(2)
         }
     }
 }
 
-struct MusicControlsView: View {
+struct MusicControlsView<AlbumArt: View>: View {
+    /// Shown to the left of the song title.
+    let albumArt: () -> AlbumArt
     @ObservedObject var musicManager = MusicManager.shared
-        @EnvironmentObject var vm: BoringViewModel
-        @ObservedObject var webcamManager = WebcamManager.shared
     @State private var sliderValue: Double = 0
     @State private var dragging: Bool = false
     @State private var lastDragged: Date = .distantPast
     @Default(.musicControlSlots) private var slotConfig
     @Default(.musicControlSlotLimit) private var slotLimit
 
-    var body: some View {
-        VStack(alignment: .leading) {
-            songInfoAndSlider
-            slotToolbar
-        }
-        .buttonStyle(PlainButtonStyle())
+    init(@ViewBuilder albumArt: @escaping () -> AlbumArt) {
+        self.albumArt = albumArt
     }
 
-    private var songInfoAndSlider: some View {
-        GeometryReader { geo in
-            VStack(alignment: .leading, spacing: 4) {
-                songInfo(width: geo.size.width)
-                musicSlider
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .center, spacing: 8) {
+                albumArt()
+                GeometryReader { geo in
+                    songInfo(width: geo.size.width)
+                        .frame(maxHeight: .infinity, alignment: .center)
+                }
             }
+            .frame(height: MusicPlayerView.albumArtSize)
+            musicSlider
+            slotToolbar
         }
-        .padding(.top, 10)
-        .padding(.leading, 5)
+        .padding(.top, 6)
+        .buttonStyle(PlainButtonStyle())
     }
 
     private func songInfo(width: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             MarqueeText(
-                $musicManager.songTitle, font: .headline, nsFont: .headline, textColor: .white,
+                $musicManager.songTitle, font: .subheadline, nsFont: .subheadline, textColor: .white,
                 frameWidth: width)
+            .fontWeight(.semibold)
             MarqueeText(
                 $musicManager.artistName,
-                font: .headline,
-                nsFont: .headline,
+                font: .subheadline,
+                nsFont: .subheadline,
                 textColor: Defaults[.playerColorTinting]
                     ? Color(nsColor: musicManager.avgColor)
                         .ensureMinimumBrightness(factor: 0.6) : .gray,
@@ -175,12 +181,12 @@ struct MusicControlsView: View {
                     }
                     MarqueeText(
                         .constant(line),
-                        font: .subheadline,
-                        nsFont: .subheadline,
+                        font: .caption,
+                        nsFont: .caption,
                         textColor: musicManager.isFetchingLyrics ? .gray.opacity(0.7) : .gray,
                         frameWidth: width
                     )
-                    .font(isPersian ? .custom("Vazirmatn-Regular", size: NSFont.preferredFont(forTextStyle: .subheadline).pointSize) : .subheadline)
+                    .font(isPersian ? .custom("Vazirmatn-Regular", size: NSFont.preferredFont(forTextStyle: .caption1).pointSize) : .caption)
                     .lineLimit(1)
                     .opacity(musicManager.isPlaying ? 1 : 0)
                     .transition(.opacity.combined(with: .move(edge: .top)))
@@ -205,8 +211,8 @@ struct MusicControlsView: View {
             ) { newValue in
                 MusicManager.shared.seek(to: newValue)
             }
-            .padding(.top, 5)
-            .frame(height: 36)
+            .padding(.top, 4)
+            .frame(height: 34)
         }
     }
 
@@ -228,9 +234,8 @@ struct MusicControlsView: View {
         )
         let padded = slotConfig.padded(to: sanitizedLimit, filler: .none)
         let result = Array(padded.prefix(sanitizedLimit))
-        // If calendar and camera are both visible alongside music, hide the edge slots
-        let shouldHideEdges = Defaults[.showCalendar] && Defaults[.showMirror] && webcamManager.cameraAvailable && vm.isCameraExpanded
-        if shouldHideEdges && result.count >= 5 {
+        // Five buttons don't fit in the music half beside the calendar; drop the edge ones
+        if Defaults[.showCalendar] && result.count >= 5 {
             return Array(result.dropFirst().dropLast())
         }
 
@@ -420,7 +425,6 @@ struct VolumeControlView: View {
 
 struct NotchHomeView: View {
     @EnvironmentObject var vm: BoringViewModel
-    @ObservedObject var webcamManager = WebcamManager.shared
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     let albumArtNamespace: Namespace.ID
@@ -435,30 +439,20 @@ struct NotchHomeView: View {
         .transition(.opacity)
     }
 
-    private var shouldShowCamera: Bool {
-        Defaults[.showMirror] && webcamManager.cameraAvailable && vm.isCameraExpanded
-    }
-
+    /// Music on the left half, calendar on the right half.
     private var mainContent: some View {
-        HStack(alignment: .top, spacing: (shouldShowCamera && Defaults[.showCalendar]) ? 10 : 15) {
+        HStack(alignment: .top, spacing: 12) {
             MusicPlayerView(albumArtNamespace: albumArtNamespace)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
 
             if Defaults[.showCalendar] {
                 CalendarView()
-                    .frame(width: shouldShowCamera ? 170 : 215)
+                    .frame(maxWidth: .infinity)
                     .onHover { isHovering in
                         vm.isHoveringCalendar = isHovering
                     }
                     .environmentObject(vm)
                     .transition(.opacity)
-            }
-
-            if shouldShowCamera {
-                CameraPreviewView(webcamManager: webcamManager)
-                    .scaledToFit()
-                    .opacity(vm.notchState == .closed ? 0 : 1)
-                    .blur(radius: vm.notchState == .closed ? 20 : 0)
-                    .animation(.interactiveSpring(response: 0.32, dampingFraction: 0.76, blendDuration: 0), value: shouldShowCamera)
             }
         }
         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
