@@ -45,8 +45,9 @@ struct BoringHeader: View {
                                 vm.toggleCameraPreview()
                             }) {
                                 Capsule()
-                                    .fill(.black)
+                                    .fill(.clear)
                                     .frame(width: 24, height: 30)
+                                    .contentShape(Capsule())
                                     .overlay {
                                         Image(systemName: "web.camera")
                                             .foregroundColor(.white)
