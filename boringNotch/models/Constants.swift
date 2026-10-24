@@ -171,7 +171,6 @@ extension Defaults.Keys {
     // MARK: HUD
     static let hudReplacement = Key<Bool>("hudReplacement", default: false)
     static let enableGradient = Key<Bool>("enableGradient", default: false)
-    static let systemEventIndicatorShadow = Key<Bool>("systemEventIndicatorShadow", default: false)
     static let systemEventIndicatorUseAccent = Key<Bool>("systemEventIndicatorUseAccent", default: false)
     static let showOpenNotchHUDPercentage = Key<Bool>("showOpenNotchHUDPercentage", default: true)
     static let showClosedNotchHUDPercentage = Key<Bool>("showClosedNotchHUDPercentage", default: false)

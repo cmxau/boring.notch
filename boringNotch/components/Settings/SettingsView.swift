@@ -467,9 +467,6 @@ struct HUD: View {
                     Text("Gradient")
                         .tag(true)
                 }
-                Defaults.Toggle(key: .systemEventIndicatorShadow) {
-                    Text("Enable glowing effect")
-                }
                 Defaults.Toggle(key: .systemEventIndicatorUseAccent) {
                     Text("Tint progress bar with accent color")
                 }
