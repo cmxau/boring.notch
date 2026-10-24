@@ -13,6 +13,7 @@ enum AgentRegistry {
         ClaudeStyleIntegration.claudeCode,
         CodexIntegration(),
         GeminiStyleIntegration.geminiCLI,
+        AntigravityIntegration(),
     ]
 
     static var kinds: [AgentKind] {

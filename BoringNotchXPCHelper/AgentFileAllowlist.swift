@@ -17,6 +17,7 @@ enum AgentFileAllowlist {
         ".claude/settings.json",
         ".codex/config.toml",
         ".gemini/settings.json",
+        ".gemini/config/hooks.json",
     ]
 
     /// Files that can only be read (for usage and quota tracking, for example).
@@ -27,6 +28,9 @@ enum AgentFileAllowlist {
         ".claude",
         ".codex",
         ".gemini",
+        ".gemini/antigravity",
+        ".gemini/antigravity-cli",
+        ".gemini/config",
     ]
 
     /// Folders whose contents can be listed and whose files (at any depth) can be read, but not written.

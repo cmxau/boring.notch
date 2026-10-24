@@ -84,7 +84,8 @@ enum AgentHookCommand {
         case never
         /// Wait until the notch decides. For events that ask for permission.
         case always
-        /// Wait only when the event's `tool_name` is one of these; otherwise return quickly.
+        /// Wait only when the event's tool (`tool_name`, or Antigravity's `toolCall.name`) is one of these;
+        /// otherwise return quickly.
         case forTools([String])
 
         var environment: String? {

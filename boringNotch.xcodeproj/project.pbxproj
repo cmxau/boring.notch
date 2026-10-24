@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F38044E2221D29C996669AF4 /* AntigravityIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FE8F9DFE1FCB73F8179B66 /* AntigravityIntegration.swift */; };
 		C8FC30C0F7476CE3F42A41E6 /* unlock.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9F9B62C5C88F0CD84BA32F91 /* unlock.caf */; };
 		F9FEF6E4C4BBA102EF47C303 /* lock.caf in Resources */ = {isa = PBXBuildFile; fileRef = 03A7961367A0CF4B55DAB791 /* lock.caf */; };
 		1DEC7579EE69C76F64E9EC1D /* AgentTerminalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FEB26AC5B5BAE731E6CE39 /* AgentTerminalSettings.swift */; };
@@ -223,6 +224,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A7FE8F9DFE1FCB73F8179B66 /* AntigravityIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AntigravityIntegration.swift; sourceTree = "<group>"; };
 		9F9B62C5C88F0CD84BA32F91 /* unlock.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = unlock.caf; sourceTree = "<group>"; };
 		03A7961367A0CF4B55DAB791 /* lock.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lock.caf; sourceTree = "<group>"; };
 		93FEB26AC5B5BAE731E6CE39 /* AgentTerminalSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentTerminalSettings.swift; sourceTree = "<group>"; };
@@ -456,6 +458,7 @@
 				CFAD4C0A16CA9F5161DE1827 /* ClaudeStyleIntegration.swift */,
 				0482EF09FF6772098950DB88 /* GeminiStyleIntegration.swift */,
 				CA359F0FB1A7C1946CB7B023 /* CodexIntegration.swift */,
+				A7FE8F9DFE1FCB73F8179B66 /* AntigravityIntegration.swift */,
 			);
 			path = integrations;
 			sourceTree = "<group>";
@@ -1189,6 +1192,7 @@
 				507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */,
 				1471A8592C6281BD0058408D /* BoringNotchWindow.swift in Sources */,
 				14CEF4182C5CAED300855D72 /* ContentView.swift in Sources */,
+				F38044E2221D29C996669AF4 /* AntigravityIntegration.swift in Sources */,
 				1DEC7579EE69C76F64E9EC1D /* AgentTerminalSettings.swift in Sources */,
 				B5E4686689953DC6F3AF8E83 /* AgentRemoteSettings.swift in Sources */,
 				C6D3920DB04F71B211E1CA4C /* AgentUsageSettings.swift in Sources */,

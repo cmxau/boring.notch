@@ -12,7 +12,7 @@ struct AgentsView: View {
 
     var body: some View {
         if hub.sessions.isEmpty && hub.requests.isEmpty {
-            EmptyStateView(message: "No agents running. Start Claude Code, Codex or Gemini CLI in a terminal.")
+            EmptyStateView(message: "No agents running. Start Claude Code, Codex, Gemini CLI or Antigravity.")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             HStack(alignment: .top, spacing: 12) {
