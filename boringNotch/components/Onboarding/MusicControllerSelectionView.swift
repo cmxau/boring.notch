@@ -16,7 +16,7 @@ struct MusicControllerSelectionView: View {
     
     private var availableMediaControllers: [MediaControllerType] {
         if MusicManager.shared.isNowPlayingDeprecated {
-            return MediaControllerType.allCases.filter { $0 != .nowPlaying }
+            return MediaControllerType.allCases.filter { !$0.usesNowPlaying }
         } else {
             return MediaControllerType.allCases
         }
@@ -130,6 +130,10 @@ extension MediaControllerType {
             return "Connects directly to the Apple Music app."
         case .youtubeMusic:
             return "Requires a third-party client with API plugin enabled."
+        case .amazonMusic:
+            return "Follows the Amazon Music app through macOS Now Playing."
+        case .soundCloud:
+            return "Follows the SoundCloud desktop app through macOS Now Playing. For soundcloud.com in a browser, choose Now Playing."
         }
     }
 }

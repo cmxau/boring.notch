@@ -25,15 +25,30 @@ struct AgentsSettings: View {
             }
 
             if agentIntegrationEnabled {
-                Section {
-                    ForEach(AgentRegistry.kinds) { kind in
-                        AgentIntegrationRow(kind: kind, status: installer.status(of: kind))
+                ForEach(AgentCatalog.Category.allCases) { category in
+                    Section {
+                        let entries = AgentCatalog.entries(in: category)
+                        let supported = entries.compactMap { entry in
+                            entry.integrationID.flatMap { id in AgentRegistry.kinds.first { $0.id == id } }.map { (entry, $0) }
+                        }
+                        ForEach(Array(supported.enumerated()), id: \.offset) { _, pair in
+                            AgentIntegrationRow(kind: pair.1, icon: pair.0.icon, status: installer.status(of: pair.1))
+                        }
+                        let unsupported = entries.filter { $0.integrationID == nil }
+                        if !unsupported.isEmpty {
+                            UnsupportedAgentsGrid(entries: unsupported)
+                        }
+                    } header: {
+                        Text(category.rawValue)
+                    } footer: {
+                        if category == .agents {
+                            Text("Connecting adds Boring Notch's hooks to the tool's settings (a backup of the original is kept next to it). Your own hooks are left alone.")
+                                .foregroundStyle(.secondary)
+                        } else if category == .ides {
+                            Text("Antigravity's connection covers its IDE, desktop app and agy CLI; Cursor's covers the editor and Cursor Agent. Agents other than Claude Code and Antigravity show their status in the notch; approvals stay in their own window.")
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                } header: {
-                    Text("Agents")
-                } footer: {
-                    Text("Connecting adds Boring Notch's hooks to the agent's settings (a backup of the original is kept next to it). Your own hooks are left alone.")
-                        .foregroundStyle(.secondary)
                 }
 
                 Section {
@@ -59,21 +74,46 @@ struct AgentsSettings: View {
                 AgentTerminalSettingsSection()
             }
         }
-        .navigationTitle("Agents")
+        .navigationTitle("AI Integrations")
         .task {
             await installer.refreshStatuses()
         }
     }
 }
 
+/// Tools that can't be connected yet, as a wrapped grid of icons.
+private struct UnsupportedAgentsGrid: View {
+    let entries: [AgentCatalog.Entry]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Not supported yet")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), alignment: .leading)], alignment: .leading, spacing: 8) {
+                ForEach(entries) { entry in
+                    HStack(spacing: 6) {
+                        AgentCatalogIcon(icon: entry.icon, size: 16)
+                        Text(entry.name)
+                            .font(.caption)
+                            .lineLimit(1)
+                    }
+                    .opacity(0.6)
+                }
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
 private struct AgentIntegrationRow: View {
     let kind: AgentKind
+    let icon: String?
     let status: AgentIntegrationInstaller.Status?
 
     var body: some View {
         HStack {
-            Image(systemName: kind.symbol)
-                .frame(width: 20)
+            AgentCatalogIcon(icon: icon, symbol: kind.symbol, size: 22)
             VStack(alignment: .leading, spacing: 2) {
                 Text(kind.displayName)
                 Text(detail)

@@ -16,10 +16,8 @@ struct BoringHeader: View {
     var body: some View {
         HStack(spacing: 0) {
             HStack {
-                if ((!tvm.isEmpty || coordinator.alwaysShowTabs) && Defaults[.boringShelf]) || Defaults[.agentIntegrationEnabled] {
+                if vm.notchState == .open {
                     TabSelectionView()
-                } else if vm.notchState == .open {
-                    EmptyView()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -36,9 +34,9 @@ struct BoringHeader: View {
                     }
             }
 
-            HStack(spacing: 4) {
+            HStack(spacing: 2) {
                 if vm.notchState == .open {
-                    if isHUDType(coordinator.sneakPeek.type) && coordinator.sneakPeek.show && Defaults[.showOpenNotchHUD] {
+                    if isHUDType(coordinator.sneakPeek.type) && coordinator.sneakPeek.show {
                         OpenNotchHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                     } else {
@@ -47,8 +45,9 @@ struct BoringHeader: View {
                                 vm.toggleCameraPreview()
                             }) {
                                 Capsule()
-                                    .fill(.black)
-                                    .frame(width: 30, height: 30)
+                                    .fill(.clear)
+                                    .frame(width: 24, height: 30)
+                                    .contentShape(Capsule())
                                     .overlay {
                                         Image(systemName: "web.camera")
                                             .foregroundColor(.white)
@@ -58,37 +57,19 @@ struct BoringHeader: View {
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
-                        if Defaults[.settingsIconInNotch] {
-                            Button(action: {
-                                DispatchQueue.main.async {
-                                    SettingsWindowController.shared.showWindow()
-                                }
-                                
-                            }) {
-                                Capsule()
-                                    .fill(.black)
-                                    .frame(width: 30, height: 30)
-                                    .overlay {
-                                        Image(systemName: "gear")
-                                            .foregroundColor(.white)
-                                            .padding()
-                                            .imageScale(.medium)
-                                    }
+                        Button(action: {
+                            DispatchQueue.main.async {
+                                SettingsWindowController.shared.showWindow()
                             }
-                            .buttonStyle(PlainButtonStyle())
+                        }) {
+                            Image(systemName: "gear")
+                                .foregroundColor(.white)
+                                .imageScale(.medium)
+                                .frame(width: 24, height: 30)
+                                .contentShape(Rectangle())
                         }
-                        if Defaults[.showBatteryIndicator] {
-                            BoringBatteryView(
-                                batteryWidth: 30,
-                                isCharging: batteryModel.isCharging,
-                                isInLowPowerMode: batteryModel.isInLowPowerMode,
-                                isPluggedIn: batteryModel.isPluggedIn,
-                                levelBattery: batteryModel.levelBattery,
-                                maxCapacity: batteryModel.maxCapacity,
-                                timeToFullCharge: batteryModel.timeToFullCharge,
-                                isForNotification: false
-                            )
-                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .help("Settings")
                     }
                 }
             }

@@ -18,13 +18,6 @@ let appVersion = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as
 let temporaryDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
 let spacing: CGFloat = 16
 
-struct CustomVisualizer: Codable, Hashable, Equatable, Defaults.Serializable {
-    let UUID: UUID
-    var name: String
-    var url: URL
-    var speed: CGFloat = 1.0
-}
-
 enum CalendarSelectionState: Codable, Defaults.Serializable {
     case all
     case selected(Set<String>)
@@ -43,18 +36,27 @@ extension Notification.Name {
 
 // Media controller types for selection in settings
 enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializable {
-    case nowPlaying = "Now Playing"
+    // Alphabetical, as listed in Settings
+    case amazonMusic = "Amazon Music"
     case appleMusic = "Apple Music"
+    case nowPlaying = "Now Playing"
+    case soundCloud = "SoundCloud"
     case spotify = "Spotify"
     case youtubeMusic = "YouTube Music"
-    
-    var id: String { self.rawValue }
-}
 
-// Sneak peek styles for selection in settings
-enum SneakPeekStyle: String, CaseIterable, Identifiable, Defaults.Serializable {
-    case standard = "Default"
-    case inline = "Inline"
+    /// Sources that read macOS Now Playing, which isn't available on every macOS version.
+    var usesNowPlaying: Bool {
+        self == .nowPlaying || self == .amazonMusic || self == .soundCloud
+    }
+
+    /// Apps followed by the Amazon Music and SoundCloud sources.
+    var appBundleIdentifiers: Set<String> {
+        switch self {
+        case .amazonMusic: return ["com.amazon.music"]
+        case .soundCloud: return ["com.soundcloud.desktop", "com.salomvary.soundcleod"]
+        default: return []
+        }
+    }
     
     var id: String { self.rawValue }
 }
@@ -70,7 +72,6 @@ enum OptionKeyAction: String, CaseIterable, Identifiable, Defaults.Serializable 
 
 extension Defaults.Keys {
     // MARK: General
-    static let menubarIcon = Key<Bool>("menubarIcon", default: true)
     static let showOnAllDisplays = Key<Bool>("showOnAllDisplays", default: false)
     static let automaticallySwitchDisplay = Key<Bool>("automaticallySwitchDisplay", default: true)
     static let showHelloAnimationOnLaunch = Key<Bool>("showHelloAnimationOnLaunch", default: true)
@@ -116,37 +117,39 @@ extension Defaults.Keys {
     static let showEmojis = Key<Bool>("showEmojis", default: false)
     //static let alwaysShowTabs = Key<Bool>("alwaysShowTabs", default: true)
     static let showMirror = Key<Bool>("showMirror", default: false)
-    static let mirrorShape = Key<MirrorShapeEnum>("mirrorShape", default: MirrorShapeEnum.rectangle)
-    static let settingsIconInNotch = Key<Bool>("settingsIconInNotch", default: true)
     static let lightingEffect = Key<Bool>("lightingEffect", default: true)
     static let enableShadow = Key<Bool>("enableShadow", default: true)
     static let cornerRadiusScaling = Key<Bool>("cornerRadiusScaling", default: true)
 
-    static let showNotHumanFace = Key<Bool>("showNotHumanFace", default: false)
+    /// A cat in the closed notch while nothing else is showing
+    static let showNotchPet = Key<Bool>("showNotchPet", default: true)
+    /// Lyrics on the Music tab take the album art's colour instead of white and grey
+    static let lyricsUseAlbumColor = Key<Bool>("lyricsUseAlbumColor", default: true)
+    /// The order of the tabs after Home, which always comes first
+    static let tabOrder = Key<[NotchViews]>("tabOrder", default: [.music, .calendar, .agents, .shelf])
+    /// Turns every Boring Notch keyboard shortcut off without clearing them
+    static let keyboardShortcutsEnabled = Key<Bool>("keyboardShortcutsEnabled", default: true)
+    /// Tabs the user hid from the open notch
+    static let hiddenTabs = Key<[NotchViews]>("hiddenTabs", default: [])
+    static let homeLeftPane = Key<HomePane>("homeLeftPane", default: .music)
+    static let homeRightPane = Key<HomePane>("homeRightPane", default: .calendar)
+    /// What the open notch is drawn on
+    static let notchBackgroundStyle = Key<NotchBackgroundStyle>("notchBackgroundStyle", default: .black)
     static let tileShowLabels = Key<Bool>("tileShowLabels", default: false)
     static let showCalendar = Key<Bool>("showCalendar", default: false)
+    /// Show upcoming events in the closed notch before they start, and when they start
+    static let calendarEventNotifications = Key<Bool>("calendarEventNotifications", default: true)
+    static let calendarEventLeadMinutes = Key<Int>("calendarEventLeadMinutes", default: 5)
     static let hideCompletedReminders = Key<Bool>("hideCompletedReminders", default: true)
-    static let sliderColor = Key<SliderColorEnum>(
-        "sliderUseAlbumArtColor",
-        default: SliderColorEnum.white
-    )
     static let playerColorTinting = Key<Bool>("playerColorTinting", default: true)
-    static let useMusicVisualizer = Key<Bool>("useMusicVisualizer", default: true)
-    static let customVisualizers = Key<[CustomVisualizer]>("customVisualizers", default: [])
-    static let selectedVisualizer = Key<CustomVisualizer?>("selectedVisualizer", default: nil)
     
     // MARK: Gestures
-    static let enableGestures = Key<Bool>("enableGestures", default: true)
-    static let closeGestureEnabled = Key<Bool>("closeGestureEnabled", default: true)
-    static let gestureSensitivity = Key<CGFloat>("gestureSensitivity", default: 200.0)
     
     // MARK: Media playback
     static let coloredSpectrogram = Key<Bool>("coloredSpectrogram", default: true)
     static let enableSneakPeek = Key<Bool>("enableSneakPeek", default: false)
-    static let sneakPeekStyles = Key<SneakPeekStyle>("sneakPeekStyles", default: .standard)
     static let waitInterval = Key<Double>("waitInterval", default: 3)
     static let showShuffleAndRepeat = Key<Bool>("showShuffleAndRepeat", default: false)
-    static let enableLyrics = Key<Bool>("enableLyrics", default: false)
     static let musicControlSlots = Key<[MusicControlButton]>(
         "musicControlSlots",
         default: MusicControlButton.defaultLayout
@@ -158,9 +161,6 @@ extension Defaults.Keys {
     
     // MARK: Battery
     static let showPowerStatusNotifications = Key<Bool>("showPowerStatusNotifications", default: true)
-    static let showBatteryIndicator = Key<Bool>("showBatteryIndicator", default: true)
-    static let showBatteryPercentage = Key<Bool>("showBatteryPercentage", default: true)
-    static let showPowerStatusIcons = Key<Bool>("showPowerStatusIcons", default: true)
     
     // MARK: Downloads
     static let enableDownloadListener = Key<Bool>("enableDownloadListener", default: true)
@@ -170,11 +170,8 @@ extension Defaults.Keys {
     
     // MARK: HUD
     static let hudReplacement = Key<Bool>("hudReplacement", default: false)
-    static let inlineHUD = Key<Bool>("inlineHUD", default: false)
     static let enableGradient = Key<Bool>("enableGradient", default: false)
-    static let systemEventIndicatorShadow = Key<Bool>("systemEventIndicatorShadow", default: false)
     static let systemEventIndicatorUseAccent = Key<Bool>("systemEventIndicatorUseAccent", default: false)
-    static let showOpenNotchHUD = Key<Bool>("showOpenNotchHUD", default: true)
     static let showOpenNotchHUDPercentage = Key<Bool>("showOpenNotchHUDPercentage", default: true)
     static let showClosedNotchHUDPercentage = Key<Bool>("showClosedNotchHUDPercentage", default: false)
     // Option key modifier behaviour for media keys

@@ -14,7 +14,10 @@ struct InlineHUD: View {
     @Binding var value: CGFloat
     @Binding var icon: String
     @Binding var hoverAnimation: Bool
-    @Binding var gestureProgress: CGFloat
+
+    /// Each side of the camera. Only the icon is on the left now, so it's no wider than the slider needs; both
+    /// sides stay equal so the notch stays centred under the camera.
+    static let wingWidth: CGFloat = 72
     var body: some View {
         HStack {
             HStack(spacing: 5) {
@@ -53,15 +56,10 @@ struct InlineHUD: View {
                 }
                 .foregroundStyle(.white)
                 .symbolVariant(.fill)
-                
-                Text(Type2Name(type))
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
-                    .allowsTightening(true)
-                    .contentTransition(.numericText())
+                // Only the icon; the name stays for VoiceOver
+                .accessibilityLabel(Type2Name(type))
             }
-            .frame(width: 100 - (hoverAnimation ? 0 : 12) + gestureProgress / 2, height: vm.notchSize.height - (hoverAnimation ? 0 : 12), alignment: .leading)
+            .frame(width: Self.wingWidth - (hoverAnimation ? 0 : 6), height: vm.notchSize.height - (hoverAnimation ? 0 : 12), alignment: .leading)
             
             Rectangle()
                 .fill(.black)
@@ -106,7 +104,7 @@ struct InlineHUD: View {
                 }
             }
             .padding(.trailing, 4)
-            .frame(width: 100 - (hoverAnimation ? 0 : 12) + gestureProgress / 2, height: vm.closedNotchSize.height - (hoverAnimation ? 0 : 12), alignment: .center)
+            .frame(width: Self.wingWidth - (hoverAnimation ? 0 : 6), height: vm.closedNotchSize.height - (hoverAnimation ? 0 : 12), alignment: .center)
         }
         .frame(height: vm.closedNotchSize.height + (hoverAnimation ? 8 : 0), alignment: .center)
     }
@@ -154,7 +152,7 @@ struct InlineHUD: View {
 }
 
 #Preview {
-    InlineHUD(type: .constant(.brightness), value: .constant(0.4), icon: .constant(""), hoverAnimation: .constant(false), gestureProgress: .constant(0))
+    InlineHUD(type: .constant(.brightness), value: .constant(0.4), icon: .constant(""), hoverAnimation: .constant(false))
         .padding(.horizontal, 8)
         .background(Color.black)
         .padding()

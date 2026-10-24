@@ -197,20 +197,20 @@ struct CalendarView: View {
                         .foregroundColor(Color(white: 0.65))
                 }
 
-                ZStack(alignment: .top) {
-                    WheelPicker(selectedDate: $selectedDate, config: Config())
-                    HStack(alignment: .top) {
+                // Fade the days out at the edges with transparency, so it works on any notch background
+                WheelPicker(selectedDate: $selectedDate, config: Config())
+                    .mask {
                         LinearGradient(
-                            colors: [Color.black, .clear], startPoint: .leading, endPoint: .trailing
+                            stops: [
+                                .init(color: .clear, location: 0),
+                                .init(color: .black, location: 0.15),
+                                .init(color: .black, location: 0.85),
+                                .init(color: .clear, location: 1),
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
                         )
-                        .frame(width: 20)
-                        Spacer()
-                        LinearGradient(
-                            colors: [.clear, Color.black], startPoint: .leading, endPoint: .trailing
-                        )
-                        .frame(width: 20)
                     }
-                }
             }
 
             let filteredEvents = EventListView.filteredEvents(

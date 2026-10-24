@@ -22,14 +22,14 @@ struct CameraPreviewView: View {
                 if let previewLayer = webcamManager.previewLayer {
                     CameraPreviewLayerView(previewLayer: previewLayer)
                         .scaleEffect(x: -1, y: 1)
-                        .clipShape(RoundedRectangle(cornerRadius: Defaults[.mirrorShape] == .rectangle ? !Defaults[.cornerRadiusScaling] ? MusicPlayerImageSizes.cornerRadiusInset.closed : MusicPlayerImageSizes.cornerRadiusInset.opened : 100))
+                        .clipShape(RoundedRectangle(cornerRadius: Defaults[.cornerRadiusScaling] ? MusicPlayerImageSizes.cornerRadiusInset.opened : MusicPlayerImageSizes.cornerRadiusInset.closed))
                         .frame(width: geometry.size.width, height: geometry.size.width)
                         .opacity(webcamManager.isSessionRunning ? 1 : 0)
                 }
 
                 if !webcamManager.isSessionRunning {
                     ZStack {
-                        RoundedRectangle(cornerRadius: Defaults[.mirrorShape] == .rectangle ? !Defaults[.cornerRadiusScaling] ? MusicPlayerImageSizes.cornerRadiusInset.closed : 12 : 100)
+                        RoundedRectangle(cornerRadius: Defaults[.cornerRadiusScaling] ? 12 : MusicPlayerImageSizes.cornerRadiusInset.closed)
                             .fill(Color(red: 20/255, green: 20/255, blue: 20/255))
                             .strokeBorder(.white.opacity(0.04), lineWidth: 1)
                             .frame(width: geometry.size.width, height: geometry.size.width)
@@ -90,6 +90,49 @@ struct CameraPreviewView: View {
         @unknown default:
             break
         }
+    }
+}
+
+/// The mirror filling the open notch, in place of its usual contents. Clicking it, or closing the notch, puts
+/// the contents back.
+struct NotchMirrorView: View {
+    @EnvironmentObject var vm: BoringViewModel
+    @ObservedObject var webcamManager: WebcamManager
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: MusicPlayerImageSizes.cornerRadiusInset.opened)
+                .fill(Color(red: 20/255, green: 20/255, blue: 20/255))
+
+            if let previewLayer = webcamManager.previewLayer {
+                CameraPreviewLayerView(previewLayer: previewLayer)
+                    .scaleEffect(x: -1, y: 1)
+                    .opacity(webcamManager.isSessionRunning ? 1 : 0)
+            }
+
+            if !webcamManager.isSessionRunning {
+                Image(systemName: "web.camera")
+                    .font(.title)
+                    .foregroundStyle(.gray)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: MusicPlayerImageSizes.cornerRadiusInset.opened))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            vm.toggleCameraPreview()
+        }
+        .onDisappear {
+            // The mirror is temporary: the next time the notch opens it shows its contents again
+            if webcamManager.isSessionRunning {
+                webcamManager.stopSession()
+            }
+            vm.isCameraExpanded = false
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Mirror")
+        .accessibilityHint("Click to close the mirror")
+        .accessibilityAddTraits(.isButton)
     }
 }
 

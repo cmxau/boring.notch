@@ -2,7 +2,7 @@
 #
 # Boring Notch agent hook bridge.
 #
-# AI coding agents (Claude Code, Codex, Gemini CLI, Cursor, ...) run this from their hook settings. It forwards
+# AI coding agents (Claude Code, Codex, Gemini CLI, Antigravity, ...) run this from their hook settings. It forwards
 # the hook event to Boring Notch over localhost and prints Boring Notch's reply, which is how approvals and
 # answers made in the notch get back to the agent.
 #
@@ -37,8 +37,8 @@ else
 fi
 
 # Hooks that wait for a decision in the notch are installed with BORING_NOTCH_WAIT set: "always", or
-# "tools:A,B" to wait only for those tools. Everything else is fire-and-forget, so a stuck notch can never
-# hold an agent up for more than a few seconds.
+# "tools:A,B" to wait only for those tools (the payload's "tool_name", or "name" in Antigravity's "toolCall").
+# Everything else is fire-and-forget, so a stuck notch can never hold an agent up for more than a few seconds.
 wait=3
 case "${BORING_NOTCH_WAIT:-}" in
     always) wait=86400 ;;
@@ -47,7 +47,7 @@ case "${BORING_NOTCH_WAIT:-}" in
         old_ifs="$IFS"
         IFS=','
         for tool in $tools; do
-            if printf '%s' "$payload" | grep -Eq "\"tool_name\"[[:space:]]*:[[:space:]]*\"$tool\""; then
+            if printf '%s' "$payload" | grep -Eq "\"(tool_name|name)\"[[:space:]]*:[[:space:]]*\"$tool\""; then
                 wait=86400
             fi
         done

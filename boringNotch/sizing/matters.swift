@@ -13,7 +13,20 @@ let downloadSneakSize: CGSize = .init(width: 65, height: 1)
 let batterySneakSize: CGSize = .init(width: 160, height: 1)
 
 let shadowPadding: CGFloat = 20
+
+/// This fork's GitHub pages.
+enum AppLinks {
+    static let repository = URL(string: "https://github.com/cmxau/boring.notch")!
+    static let reportBug = URL(string: "https://github.com/cmxau/boring.notch/issues/new?labels=bug&title=%5BBug%5D%20&body=%23%23%20What%20happened%0A%0A%23%23%20Steps%20to%20reproduce%0A1.%20%0A%0A%23%23%20Expected%0A%0A%23%23%20macOS%20and%20app%20version%0A")!
+    static let requestFeature = URL(string: "https://github.com/cmxau/boring.notch/issues/new?labels=enhancement&title=%5BFeature%5D%20&body=%23%23%20The%20idea%0A%0A%23%23%20Why%20it%20would%20help%0A")!
+    static let releases = URL(string: "https://github.com/cmxau/boring.notch/releases")!
+    static let releasesAPI = URL(string: "https://api.github.com/repos/cmxau/boring.notch/releases?per_page=10")!
+}
+/// The widest the open notch gets, and its height. Its width follows the closed notch; see `openNotchWidth`.
 let openNotchSize: CGSize = .init(width: 640, height: 190)
+/// How much wider the open notch is than the closed notch while music plays, so the header keeps the tabs on the
+/// left of the camera and the buttons on the right, and the home view's halves stay readable.
+let openNotchExtraWidth: CGFloat = 170
 let windowSize: CGSize = .init(width: openNotchSize.width, height: openNotchSize.height + shadowPadding)
 let cornerRadiusInsets: (opened: (top: CGFloat, bottom: CGFloat), closed: (top: CGFloat, bottom: CGFloat)) = (opened: (top: 19, bottom: 24), closed: (top: 6, bottom: 14))
 
@@ -34,6 +47,18 @@ enum MusicPlayerImageSizes {
     }
     
     return nil
+}
+
+/// Width of one tab button in the open notch's header.
+let openNotchTabWidth: CGFloat = 24
+
+/// The open notch's width: the closed notch with music playing (album art, camera, equaliser) plus
+/// `openNotchExtraWidth`, or wider when the tabs need more room beside the camera.
+func openNotchWidth(closedNotchSize: CGSize, closedNotchHeight: CGFloat, tabCount: Int) -> CGFloat {
+    let closedMusicWidth = closedNotchSize.width + 2 * max(0, closedNotchHeight - 12) + 20
+    // Tabs sit left of the camera, mirrored by the same width on the right; 62 is the open notch's side padding
+    let fitsTabs = closedNotchSize.width + 2 * (CGFloat(tabCount) * openNotchTabWidth + 8) + 62
+    return min(openNotchSize.width, max(closedMusicWidth + openNotchExtraWidth, fitsTabs))
 }
 
 @MainActor func getClosedNotchSize(screenUUID: String? = nil) -> CGSize {

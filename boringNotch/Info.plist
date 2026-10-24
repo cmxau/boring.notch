@@ -19,5 +19,7 @@
 	<array>
 		<dict/>
 	</array>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Boring Notch listens to what's playing to animate the equaliser in the notch. Nothing is recorded.</string>
 </dict>
 </plist>

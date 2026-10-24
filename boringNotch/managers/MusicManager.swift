@@ -125,6 +125,9 @@ class MusicManager: ObservableObject {
             } else {
                 return nil
             }
+        case .amazonMusic, .soundCloud:
+            guard !self.isNowPlayingDeprecated else { return nil }
+            newController = AppNowPlayingController(bundleIdentifiers: type.appBundleIdentifiers)
         case .appleMusic:
             newController = AppleMusicController()
         case .spotify:
@@ -342,7 +345,8 @@ class MusicManager: ObservableObject {
 
     // MARK: - Lyrics
     private func fetchLyricsIfAvailable(bundleIdentifier: String?, title: String, artist: String) {
-        guard Defaults[.enableLyrics], !title.isEmpty else {
+        // Always fetched: the Music tab shows them
+        guard !title.isEmpty else {
             DispatchQueue.main.async {
                 self.isFetchingLyrics = false
                 self.currentLyrics = ""
@@ -584,11 +588,7 @@ class MusicManager: ObservableObject {
 
     private func updateSneakPeek() {
         if isPlaying && Defaults[.enableSneakPeek] {
-            if Defaults[.sneakPeekStyles] == .standard {
-                coordinator.toggleSneakPeek(status: true, type: .music)
-            } else {
-                coordinator.toggleExpandingView(status: true, type: .music)
-            }
+            coordinator.toggleExpandingView(status: true, type: .music)
         }
     }
 

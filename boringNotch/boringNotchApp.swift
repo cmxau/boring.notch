@@ -15,7 +15,6 @@ import SwiftUI
 @main
 struct DynamicNotchApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @Default(.menubarIcon) var showMenuBarIcon
     @Environment(\.openWindow) var openWindow
 
     let updaterController: SPUStandardUpdaterController
@@ -29,22 +28,9 @@ struct DynamicNotchApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("boring.notch", systemImage: "sparkle", isInserted: $showMenuBarIcon) {
-            Button("Settings") {
-                DispatchQueue.main.async {
-                    SettingsWindowController.shared.showWindow()
-                }
-            }
-            .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
-            CheckForUpdatesView(updater: updaterController.updater)
-            Divider()
-            Button("Restart Boring Notch") {
-                ApplicationRelauncher.restart()
-            }
-            Button("Quit", role: .destructive) {
-                NSApplication.shared.terminate(self)
-            }
-            .keyboardShortcut(KeyEquivalent("Q"), modifiers: .command)
+        // No menu bar icon: settings open from the gear in the notch, or by right-clicking the notch
+        Settings {
+            EmptyView()
         }
     }
 }
@@ -521,16 +507,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         KeyboardShortcuts.onKeyDown(for: .toggleSneakPeek) { [weak self] in
             guard let self = self else { return }
-            if Defaults[.sneakPeekStyles] == .inline {
-                let newStatus = !self.coordinator.expandingView.show
-                self.coordinator.toggleExpandingView(status: newStatus, type: .music)
-            } else {
-                self.coordinator.toggleSneakPeek(
-                    status: !self.coordinator.sneakPeek.show,
-                    type: .music,
-                    duration: 3.0
-                )
-            }
+            let newStatus = !self.coordinator.expandingView.show
+            self.coordinator.toggleExpandingView(status: newStatus, type: .music)
         }
 
         KeyboardShortcuts.onKeyDown(for: .toggleNotchOpen) { [weak self] in
@@ -590,6 +568,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupDragDetectors()
         BluetoothAccessoryManager.shared.start()
+        CalendarEventNotifier.shared.start()
+        AppShortcutsController.shared.start()
         AgentHub.shared.start()
 
         NotificationCenter.default.addObserver(

@@ -18,6 +18,11 @@ on:
         required: false
         default: true
         type: boolean
+      draft:
+        description: "Save the pre-release as a draft, to check before publishing it"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -148,8 +153,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ inputs.version }}
+          DRAFT: ${{ inputs.draft }}
         run: |
           set -euo pipefail
+          draft_flag=""
+          if [ "$DRAFT" = "true" ]; then
+            draft_flag="--draft"
+          fi
           cat > "$RUNNER_TEMP/notes.md" <<NOTES
           Alpha build of Boring Notch ${VERSION}, from ${GITHUB_SHA}.
 
@@ -164,4 +174,5 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "Boring Notch ${VERSION}" \
             --notes-file "$RUNNER_TEMP/notes.md" \
-            --prerelease
+            --prerelease \
+            $draft_flag

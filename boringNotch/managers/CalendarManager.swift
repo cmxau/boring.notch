@@ -63,6 +63,13 @@ class CalendarManager: ObservableObject {
         updateSelectedCalendars()
     }
 
+    /// Timed events (no all-day events or reminders) in the selected calendars starting between the two dates.
+    func timedEvents(startingFrom start: Date, to end: Date) async -> [EventModel] {
+        guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else { return [] }
+        let events = await calendarService.events(from: start, to: end, calendars: selectedCalendars.map { $0.id })
+        return events.filter { !$0.isAllDay && !$0.type.isReminder && $0.start >= start && $0.start <= end }
+    }
+
     func checkCalendarAuthorization() async {
         let status = EKEventStore.authorizationStatus(for: .event)
         DispatchQueue.main.async {

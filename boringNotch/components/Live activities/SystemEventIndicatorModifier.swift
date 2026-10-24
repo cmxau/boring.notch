@@ -122,12 +122,6 @@ struct DraggableProgressBar: View {
                                 AnyShapeStyle(Defaults[.systemEventIndicatorUseAccent] ? Color.effectiveAccent : Color.white)
                         )
                         .frame(width: max(0, min(geo.size.width * value, geo.size.width)))
-                        .shadow(color: Defaults[.systemEventIndicatorShadow] ?
-                            (Defaults[.systemEventIndicatorUseAccent] ?
-                                Color.effectiveAccent.ensureMinimumBrightness(factor: 0.7) :
-                                Color.white) :
-                            Color.clear,
-                            radius: 8, x: 3)
                         .opacity(value.isZero ? 0 : 1)
                 }
                 .gesture(
@@ -145,7 +139,7 @@ struct DraggableProgressBar: View {
                         }
                 )
             }
-            .frame(height: Defaults[.inlineHUD] ? isDragging ? 8 : 5 : isDragging ? 9 : 6)
+            .frame(height: isDragging ? 8 : 5)
         }
     }
     
