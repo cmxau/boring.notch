@@ -15,6 +15,9 @@ struct ClaudeStyleIntegration: AgentIntegration {
     let configFolder: String
     /// Home-relative settings file holding the hooks, e.g. ".claude/settings.json".
     let settingsFile: String
+    /// Agents that copied the hook layout but not Claude Code's decision output only report status: no hook waits
+    /// for the notch, and timeouts are left to the agent's own defaults (their units differ).
+    var statusOnly = false
 
     static let claudeCode = ClaudeStyleIntegration(
         kind: AgentKind(
@@ -27,11 +30,41 @@ struct ClaudeStyleIntegration: AgentIntegration {
         settingsFile: ".claude/settings.json"
     )
 
+    /// Factory's Droid CLI.
+    static let droid = statusOnlyAgent(id: "droid", name: "Droid", symbol: "cpu", folder: ".factory")
+    /// Tencent's CodeBuddy Code CLI.
+    static let codeBuddy = statusOnlyAgent(id: "codebuddy", name: "CodeBuddy", symbol: "person.2.fill", folder: ".codebuddy")
+    /// Alibaba's Qwen Code CLI.
+    static let qwenCode = statusOnlyAgent(id: "qwen", name: "Qwen Code", symbol: "q.circle.fill", folder: ".qwen")
+    /// Qoder's CLI and IDE.
+    static let qoder = statusOnlyAgent(id: "qoder", name: "Qoder", symbol: "chevron.left.forwardslash.chevron.right", folder: ".qoder")
+    /// Qoder's China edition.
+    static let qoderCN = statusOnlyAgent(id: "qoder-cn", name: "Qoder CN", symbol: "chevron.left.forwardslash.chevron.right", folder: ".qoder-cn")
+
+    private static func statusOnlyAgent(id: String, name: String, symbol: String, folder: String) -> ClaudeStyleIntegration {
+        ClaudeStyleIntegration(
+            kind: AgentKind(id: id, displayName: name, symbol: symbol, capabilities: [.status]),
+            configFolder: folder,
+            settingsFile: folder + "/settings.json",
+            statusOnly: true
+        )
+    }
+
     var detectionPaths: [String] { [configFolder] }
     var configFiles: [String] { [settingsFile] }
 
     private var events: [JSONHookSettings.Event] {
-        [
+        if statusOnly {
+            return [
+                .init("SessionStart"),
+                .init("SessionEnd"),
+                .init("UserPromptSubmit"),
+                .init("PreToolUse", matcher: "*"),
+                .init("Notification", matcher: "*"),
+                .init("Stop"),
+            ]
+        }
+        return [
             .init("SessionStart", timeout: 10),
             .init("SessionEnd", timeout: 5),
             .init("UserPromptSubmit", timeout: 10),
@@ -76,7 +109,7 @@ struct ClaudeStyleIntegration: AgentIntegration {
             }
 
         case "PreToolUse":
-            guard tool == "AskUserQuestion", let questions = Self.questions(from: input) else {
+            guard !statusOnly, tool == "AskUserQuestion", let questions = Self.questions(from: input) else {
                 update {
                     $0.status = .working
                     $0.activity = AgentFormatting.activity(tool: tool, input: input)
@@ -142,6 +175,13 @@ struct ClaudeStyleIntegration: AgentIntegration {
                     $0.status = .waitingForApproval
                     $0.activity = event.string("message")
                 }
+            } else if statusOnly {
+                // These agents notify when they're waiting on the user; the answer happens in their own window
+                update {
+                    $0.status = .waitingForApproval
+                    $0.activity = event.string("message") ?? "Waiting for you"
+                }
+                hub.alert(.attention)
             }
 
         case "Stop":

@@ -45,7 +45,7 @@ struct AgentsSettings: View {
                             Text("Connecting adds Boring Notch's hooks to the tool's settings (a backup of the original is kept next to it). Your own hooks are left alone.")
                                 .foregroundStyle(.secondary)
                         } else if category == .ides {
-                            Text("Antigravity's connection covers its IDE, desktop app and agy CLI.")
+                            Text("Antigravity's connection covers its IDE, desktop app and agy CLI; Cursor's covers the editor and Cursor Agent. Agents other than Claude Code and Antigravity show their status in the notch; approvals stay in their own window.")
                                 .foregroundStyle(.secondary)
                         }
                     }

@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		36F48D4F6F5B94667B76FAF2 /* OpenCodeIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 338FADA641C860923B87329D /* OpenCodeIntegration.swift */; };
+		602950084F9705B78B89E190 /* CopilotCLIIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F22DFE9C4E5E93E7D279C65 /* CopilotCLIIntegration.swift */; };
+		20F00F2CFADB8E2089536DCA /* CursorIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85859DC59D8E0C391C248B33 /* CursorIntegration.swift */; };
 		0FAB1D34EB1627DD98F6FFE2 /* AboutDocuments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62DC65B3ADBA2752217F340A /* AboutDocuments.swift */; };
 		D488A0B117DDA670E3CBFFCA /* AppShortcutsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06E68227A5AF35FE53078A7 /* AppShortcutsController.swift */; };
 		41E9AB84710C72BEA3BD9198 /* zcode-agent-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = D07AD45C47A6BD966952078B /* zcode-agent-icon.png */; };
@@ -273,6 +276,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		338FADA641C860923B87329D /* OpenCodeIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeIntegration.swift; sourceTree = "<group>"; };
+		6F22DFE9C4E5E93E7D279C65 /* CopilotCLIIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotCLIIntegration.swift; sourceTree = "<group>"; };
+		85859DC59D8E0C391C248B33 /* CursorIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorIntegration.swift; sourceTree = "<group>"; };
 		62DC65B3ADBA2752217F340A /* AboutDocuments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutDocuments.swift; sourceTree = "<group>"; };
 		D06E68227A5AF35FE53078A7 /* AppShortcutsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShortcutsController.swift; sourceTree = "<group>"; };
 		D07AD45C47A6BD966952078B /* zcode-agent-icon.png */ = {isa = PBXFileReference; lastKnownFileType = file; path = "zcode-agent-icon.png"; sourceTree = "<group>"; };
@@ -615,6 +621,9 @@
 				0482EF09FF6772098950DB88 /* GeminiStyleIntegration.swift */,
 				CA359F0FB1A7C1946CB7B023 /* CodexIntegration.swift */,
 				A7FE8F9DFE1FCB73F8179B66 /* AntigravityIntegration.swift */,
+				85859DC59D8E0C391C248B33 /* CursorIntegration.swift */,
+				6F22DFE9C4E5E93E7D279C65 /* CopilotCLIIntegration.swift */,
+				338FADA641C860923B87329D /* OpenCodeIntegration.swift */,
 			);
 			path = integrations;
 			sourceTree = "<group>";
@@ -1395,6 +1404,9 @@
 				507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */,
 				1471A8592C6281BD0058408D /* BoringNotchWindow.swift in Sources */,
 				14CEF4182C5CAED300855D72 /* ContentView.swift in Sources */,
+				36F48D4F6F5B94667B76FAF2 /* OpenCodeIntegration.swift in Sources */,
+				602950084F9705B78B89E190 /* CopilotCLIIntegration.swift in Sources */,
+				20F00F2CFADB8E2089536DCA /* CursorIntegration.swift in Sources */,
 				0FAB1D34EB1627DD98F6FFE2 /* AboutDocuments.swift in Sources */,
 				D488A0B117DDA670E3CBFFCA /* AppShortcutsController.swift in Sources */,
 				46D68A805680F95BA655B0F2 /* AgentCatalog.swift in Sources */,

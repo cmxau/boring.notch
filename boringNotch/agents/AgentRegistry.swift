@@ -14,6 +14,14 @@ enum AgentRegistry {
         CodexIntegration(),
         GeminiStyleIntegration.geminiCLI,
         AntigravityIntegration(),
+        ClaudeStyleIntegration.codeBuddy,
+        CopilotCLIIntegration(),
+        CursorIntegration(),
+        ClaudeStyleIntegration.droid,
+        OpenCodeIntegration(),
+        ClaudeStyleIntegration.qoder,
+        ClaudeStyleIntegration.qoderCN,
+        ClaudeStyleIntegration.qwenCode,
     ]
 
     static var kinds: [AgentKind] {

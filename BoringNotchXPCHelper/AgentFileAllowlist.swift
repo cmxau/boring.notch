@@ -18,6 +18,14 @@ enum AgentFileAllowlist {
         ".codex/config.toml",
         ".gemini/settings.json",
         ".gemini/config/hooks.json",
+        ".codebuddy/settings.json",
+        ".copilot/hooks/boring-notch.json",
+        ".cursor/hooks.json",
+        ".factory/settings.json",
+        ".config/opencode/plugin/boring-notch.js",
+        ".qoder/settings.json",
+        ".qoder-cn/settings.json",
+        ".qwen/settings.json",
     ]
 
     /// Files that can only be read (for usage and quota tracking, for example).
@@ -31,6 +39,14 @@ enum AgentFileAllowlist {
         ".gemini/antigravity",
         ".gemini/antigravity-cli",
         ".gemini/config",
+        ".codebuddy",
+        ".copilot",
+        ".cursor",
+        ".factory",
+        ".config/opencode",
+        ".qoder",
+        ".qoder-cn",
+        ".qwen",
     ]
 
     /// Folders whose contents can be listed and whose files (at any depth) can be read, but not written.
