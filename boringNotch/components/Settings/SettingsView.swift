@@ -50,7 +50,7 @@ struct SettingsView: View {
                     }
                     NavigationLink(value: "Agents") {
                         HStack {
-                            Label("AI Agents", systemImage: "sparkles")
+                            Label("AI Integrations", systemImage: "sparkles")
                             customBadge(text: "Beta")
                         }
                     }
@@ -773,87 +773,99 @@ func lighterColor(from nsColor: NSColor, amount: CGFloat = 0.14) -> Color {
 }
 
 struct About: View {
-    @State private var showBuildNumber: Bool = false
     let updaterController: SPUStandardUpdaterController
-    @Environment(\.openWindow) var openWindow
+    @State private var document: AboutDocument?
+
+    private var appName: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+            ?? "Boring Notch"
+    }
+
     var body: some View {
-        VStack {
-            Form {
-                Section {
-                    HStack {
-                        Text("Release name")
-                        Spacer()
-                        Text(Defaults[.releaseName])
-                            .foregroundStyle(.secondary)
-                    }
-                    HStack {
-                        Text("Version")
-                        Spacer()
-                        if showBuildNumber {
-                            Text("(\(Bundle.main.buildVersionNumber ?? ""))")
-                                .foregroundStyle(.secondary)
-                        }
-                        Text(Bundle.main.releaseVersionNumber ?? "unkown")
-                            .foregroundStyle(.secondary)
-                    }
-                    .onTapGesture {
-                        withAnimation {
-                            showBuildNumber.toggle()
-                        }
-                    }
-                } header: {
-                    Text("Version info")
+        Form {
+            Section {
+                VStack(spacing: 6) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 96, height: 96)
+                    Text(appName)
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    Text("Version \(Bundle.main.releaseVersionNumber ?? "") (\(Bundle.main.buildVersionNumber ?? ""))")
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+            }
 
-                UpdaterSettingsView(updater: updaterController.updater)
-
-                HStack(spacing: 30) {
-                    Spacer(minLength: 0)
-                    Button {
-                        NSWorkspace.shared.open(AppLinks.reportBug)
-                    } label: {
-                        VStack(spacing: 5) {
-                            Image(systemName: "ladybug")
-                                .frame(height: 18)
-                            Text("Report a bug")
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    Button {
-                        NSWorkspace.shared.open(AppLinks.repository)
-                    } label: {
-                        VStack(spacing: 5) {
-                            Image("Github")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 18)
-                            Text("GitHub")
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    Spacer(minLength: 0)
+            Section {
+                Button("Check for Updates…") {
+                    updaterController.updater.checkForUpdates()
                 }
-                .buttonStyle(PlainButtonStyle())
+                .disabled(!updaterController.updater.canCheckForUpdates)
+                aboutRow("Release Notes", systemImage: "doc.text") { document = .releaseNotes }
+                AutomaticUpdateToggles(updater: updaterController.updater)
             }
-            VStack(spacing: 0) {
-                Divider()
-                Text("Made with 🫶🏻 by not so boring not.people")
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 5)
-                    .padding(.bottom, 7)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 10)
+
+            Section {
+                aboutRow("Privacy Policy", systemImage: "hand.raised") { document = .privacyPolicy }
+                aboutRow("Terms of Use", systemImage: "doc.plaintext") { document = .termsOfUse }
             }
-            .frame(maxWidth: .infinity, alignment: .center)
+
+            Section {
+                aboutRow("Request a Feature", systemImage: "lightbulb", external: true) {
+                    NSWorkspace.shared.open(AppLinks.requestFeature)
+                }
+                aboutRow("Report a Bug", systemImage: "ladybug", external: true) {
+                    NSWorkspace.shared.open(AppLinks.reportBug)
+                }
+                aboutRow("Star on GitHub", systemImage: "star", external: true) {
+                    NSWorkspace.shared.open(AppLinks.repository)
+                }
+            }
         }
-        .toolbar {
-            //            Button("Welcome window") {
-            //                openWindow(id: "onboarding")
-            //            }
-            //            .controlSize(.extraLarge)
-            CheckForUpdatesView(updater: updaterController.updater)
+        .sheet(item: $document) { document in
+            AboutDocumentSheet(document: document)
         }
+        .accentColor(.effectiveAccent)
         .navigationTitle("About")
+    }
+
+    private func aboutRow(_ title: String, systemImage: String, external: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Label(title, systemImage: systemImage)
+                Spacer()
+                Image(systemName: external ? "arrow.up.right" : "chevron.right")
+                    .foregroundStyle(.secondary)
+                    .font(.caption)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// "Check for updates automatically" and "Install updates automatically", kept in step with Sparkle.
+private struct AutomaticUpdateToggles: View {
+    let updater: SPUUpdater
+    @State private var checks: Bool
+    @State private var installs: Bool
+
+    init(updater: SPUUpdater) {
+        self.updater = updater
+        _checks = State(initialValue: updater.automaticallyChecksForUpdates)
+        _installs = State(initialValue: updater.automaticallyDownloadsUpdates)
+    }
+
+    var body: some View {
+        Toggle("Check for updates automatically", isOn: $checks)
+            .onChange(of: checks) { _, value in updater.automaticallyChecksForUpdates = value }
+        Toggle("Install updates automatically", isOn: $installs)
+            .disabled(!checks)
+            .onChange(of: installs) { _, value in updater.automaticallyDownloadsUpdates = value }
     }
 }
 
@@ -1508,23 +1520,56 @@ struct AccentCircleButton: View {
 }
 
 struct Shortcuts: View {
+    @Default(.keyboardShortcutsEnabled) var keyboardShortcutsEnabled
+
     var body: some View {
         Form {
             Section {
-                KeyboardShortcuts.Recorder("Toggle Sneak Peek:", name: .toggleSneakPeek)
-            } header: {
-                Text("Media")
-            } footer: {
-                Text(
-                    "Sneak Peek shows the media title and artist under the notch for a few seconds."
-                )
-                .multilineTextAlignment(.trailing)
-                .foregroundStyle(.secondary)
-                .font(.caption)
+                Defaults.Toggle(key: .keyboardShortcutsEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Enable keyboard shortcuts")
+                        Text("Turns off every Boring Notch shortcut without clearing them.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
-            Section {
-                KeyboardShortcuts.Recorder("Toggle Notch Open:", name: .toggleNotchOpen)
+
+            Group {
+                Section {
+                    KeyboardShortcuts.Recorder("Open or close the notch", name: .toggleNotchOpen)
+                } header: {
+                    Text("Notch")
+                }
+
+                Section {
+                    KeyboardShortcuts.Recorder("Previous track", name: .musicPreviousTrack)
+                    KeyboardShortcuts.Recorder("Next track", name: .musicNextTrack)
+                    KeyboardShortcuts.Recorder("Show what's playing", name: .toggleSneakPeek)
+                } header: {
+                    Text("Music")
+                } footer: {
+                    Text("Previous and next default to ⌃< and ⌃> (the comma and period keys).")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                }
+
+                Section {
+                    KeyboardShortcuts.Recorder("Approve", name: .agentApprove)
+                    KeyboardShortcuts.Recorder("Deny", name: .agentDeny)
+                    KeyboardShortcuts.Recorder("Jump to terminal", name: .agentJumpToTerminal)
+                } header: {
+                    HStack {
+                        Text("AI Integrations")
+                        customBadge(text: "Beta")
+                    }
+                } footer: {
+                    Text("Only active while an agent is waiting for you, so they don't get in the way of other apps.")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                }
             }
+            .disabled(!keyboardShortcutsEnabled)
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("Shortcuts")

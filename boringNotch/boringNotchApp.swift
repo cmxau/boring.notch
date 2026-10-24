@@ -569,6 +569,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupDragDetectors()
         BluetoothAccessoryManager.shared.start()
         CalendarEventNotifier.shared.start()
+        AppShortcutsController.shared.start()
         AgentHub.shared.start()
 
         NotificationCenter.default.addObserver(

@@ -104,6 +104,22 @@ final class AgentHub: ObservableObject {
         }
     }
 
+    /// For the approve and deny shortcuts. Questions need an answer picked, so they're left alone.
+    func answerFirstRequest(approve: Bool) {
+        guard let request = requests.first else { return }
+        if case .questions = request.kind { return }
+        resolve(request.id, with: approve ? .allow : .deny(message: nil))
+    }
+
+    /// For the jump-to-terminal shortcut: the session that's waiting, or the most recent one.
+    func jumpToWaitingSession() {
+        if let request = requests.first, let session = sessions[request.sessionID] {
+            jump(to: session)
+        } else if let session = orderedSessions.first {
+            jump(to: session)
+        }
+    }
+
     func jump(to session: AgentSession) {
         TerminalJumper.jump(to: session.terminal)
     }

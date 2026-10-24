@@ -127,6 +127,8 @@ extension Defaults.Keys {
     static let lyricsUseAlbumColor = Key<Bool>("lyricsUseAlbumColor", default: true)
     /// The order of the tabs after Home, which always comes first
     static let tabOrder = Key<[NotchViews]>("tabOrder", default: [.music, .calendar, .agents, .shelf])
+    /// Turns every Boring Notch keyboard shortcut off without clearing them
+    static let keyboardShortcutsEnabled = Key<Bool>("keyboardShortcutsEnabled", default: true)
     /// Tabs the user hid from the open notch
     static let hiddenTabs = Key<[NotchViews]>("hiddenTabs", default: [])
     static let homeLeftPane = Key<HomePane>("homeLeftPane", default: .music)

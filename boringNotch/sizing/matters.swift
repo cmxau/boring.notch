@@ -17,7 +17,10 @@ let shadowPadding: CGFloat = 20
 /// This fork's GitHub pages.
 enum AppLinks {
     static let repository = URL(string: "https://github.com/cmxau/boring.notch")!
-    static let reportBug = URL(string: "https://github.com/cmxau/boring.notch/issues/new")!
+    static let reportBug = URL(string: "https://github.com/cmxau/boring.notch/issues/new?labels=bug&title=%5BBug%5D%20&body=%23%23%20What%20happened%0A%0A%23%23%20Steps%20to%20reproduce%0A1.%20%0A%0A%23%23%20Expected%0A%0A%23%23%20macOS%20and%20app%20version%0A")!
+    static let requestFeature = URL(string: "https://github.com/cmxau/boring.notch/issues/new?labels=enhancement&title=%5BFeature%5D%20&body=%23%23%20The%20idea%0A%0A%23%23%20Why%20it%20would%20help%0A")!
+    static let releases = URL(string: "https://github.com/cmxau/boring.notch/releases")!
+    static let releasesAPI = URL(string: "https://api.github.com/repos/cmxau/boring.notch/releases?per_page=10")!
 }
 /// The widest the open notch gets, and its height. Its width follows the closed notch; see `openNotchWidth`.
 let openNotchSize: CGSize = .init(width: 640, height: 190)
