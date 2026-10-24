@@ -51,14 +51,6 @@ enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializa
     var id: String { self.rawValue }
 }
 
-// Sneak peek styles for selection in settings
-enum SneakPeekStyle: String, CaseIterable, Identifiable, Defaults.Serializable {
-    case standard = "Default"
-    case inline = "Inline"
-    
-    var id: String { self.rawValue }
-}
-
 // Action to perform when Option (⌥) is held while pressing media keys
 enum OptionKeyAction: String, CaseIterable, Identifiable, Defaults.Serializable {
     case openSettings = "Open System Settings"
@@ -116,12 +108,10 @@ extension Defaults.Keys {
     static let showEmojis = Key<Bool>("showEmojis", default: false)
     //static let alwaysShowTabs = Key<Bool>("alwaysShowTabs", default: true)
     static let showMirror = Key<Bool>("showMirror", default: false)
-    static let mirrorShape = Key<MirrorShapeEnum>("mirrorShape", default: MirrorShapeEnum.rectangle)
     static let lightingEffect = Key<Bool>("lightingEffect", default: true)
     static let enableShadow = Key<Bool>("enableShadow", default: true)
     static let cornerRadiusScaling = Key<Bool>("cornerRadiusScaling", default: true)
 
-    static let showNotHumanFace = Key<Bool>("showNotHumanFace", default: false)
     /// A cat in the closed notch while nothing else is showing
     static let showNotchPet = Key<Bool>("showNotchPet", default: true)
     static let tileShowLabels = Key<Bool>("tileShowLabels", default: false)
@@ -137,14 +127,10 @@ extension Defaults.Keys {
     static let selectedVisualizer = Key<CustomVisualizer?>("selectedVisualizer", default: nil)
     
     // MARK: Gestures
-    static let enableGestures = Key<Bool>("enableGestures", default: true)
-    static let closeGestureEnabled = Key<Bool>("closeGestureEnabled", default: true)
-    static let gestureSensitivity = Key<CGFloat>("gestureSensitivity", default: 200.0)
     
     // MARK: Media playback
     static let coloredSpectrogram = Key<Bool>("coloredSpectrogram", default: true)
     static let enableSneakPeek = Key<Bool>("enableSneakPeek", default: false)
-    static let sneakPeekStyles = Key<SneakPeekStyle>("sneakPeekStyles", default: .standard)
     static let waitInterval = Key<Double>("waitInterval", default: 3)
     static let showShuffleAndRepeat = Key<Bool>("showShuffleAndRepeat", default: false)
     static let enableLyrics = Key<Bool>("enableLyrics", default: false)
@@ -160,8 +146,6 @@ extension Defaults.Keys {
     // MARK: Battery
     static let showPowerStatusNotifications = Key<Bool>("showPowerStatusNotifications", default: true)
     static let showBatteryIndicator = Key<Bool>("showBatteryIndicator", default: true)
-    static let showBatteryPercentage = Key<Bool>("showBatteryPercentage", default: true)
-    static let showPowerStatusIcons = Key<Bool>("showPowerStatusIcons", default: true)
     
     // MARK: Downloads
     static let enableDownloadListener = Key<Bool>("enableDownloadListener", default: true)
@@ -171,11 +155,9 @@ extension Defaults.Keys {
     
     // MARK: HUD
     static let hudReplacement = Key<Bool>("hudReplacement", default: false)
-    static let inlineHUD = Key<Bool>("inlineHUD", default: false)
     static let enableGradient = Key<Bool>("enableGradient", default: false)
     static let systemEventIndicatorShadow = Key<Bool>("systemEventIndicatorShadow", default: false)
     static let systemEventIndicatorUseAccent = Key<Bool>("systemEventIndicatorUseAccent", default: false)
-    static let showOpenNotchHUD = Key<Bool>("showOpenNotchHUD", default: true)
     static let showOpenNotchHUDPercentage = Key<Bool>("showOpenNotchHUDPercentage", default: true)
     static let showClosedNotchHUDPercentage = Key<Bool>("showClosedNotchHUDPercentage", default: false)
     // Option key modifier behaviour for media keys

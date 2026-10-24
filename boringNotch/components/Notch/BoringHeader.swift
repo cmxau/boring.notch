@@ -38,7 +38,7 @@ struct BoringHeader: View {
 
             HStack(spacing: 2) {
                 if vm.notchState == .open {
-                    if isHUDType(coordinator.sneakPeek.type) && coordinator.sneakPeek.show && Defaults[.showOpenNotchHUD] {
+                    if isHUDType(coordinator.sneakPeek.type) && coordinator.sneakPeek.show {
                         OpenNotchHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                     } else {
@@ -67,9 +67,7 @@ struct BoringHeader: View {
                                 levelBattery: batteryModel.levelBattery,
                                 maxCapacity: batteryModel.maxCapacity,
                                 timeToFullCharge: batteryModel.timeToFullCharge,
-                                isForNotification: false,
-                                // No room beside the camera; the battery menu shows it
-                                showsPercentage: false
+                                isForNotification: false
                             )
                         }
                     }

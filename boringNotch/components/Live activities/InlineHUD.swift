@@ -14,7 +14,6 @@ struct InlineHUD: View {
     @Binding var value: CGFloat
     @Binding var icon: String
     @Binding var hoverAnimation: Bool
-    @Binding var gestureProgress: CGFloat
     var body: some View {
         HStack {
             HStack(spacing: 5) {
@@ -56,7 +55,7 @@ struct InlineHUD: View {
                 // Only the icon; the name stays for VoiceOver
                 .accessibilityLabel(Type2Name(type))
             }
-            .frame(width: 100 - (hoverAnimation ? 0 : 12) + gestureProgress / 2, height: vm.notchSize.height - (hoverAnimation ? 0 : 12), alignment: .leading)
+            .frame(width: 100 - (hoverAnimation ? 0 : 12), height: vm.notchSize.height - (hoverAnimation ? 0 : 12), alignment: .leading)
             
             Rectangle()
                 .fill(.black)
@@ -101,7 +100,7 @@ struct InlineHUD: View {
                 }
             }
             .padding(.trailing, 4)
-            .frame(width: 100 - (hoverAnimation ? 0 : 12) + gestureProgress / 2, height: vm.closedNotchSize.height - (hoverAnimation ? 0 : 12), alignment: .center)
+            .frame(width: 100 - (hoverAnimation ? 0 : 12), height: vm.closedNotchSize.height - (hoverAnimation ? 0 : 12), alignment: .center)
         }
         .frame(height: vm.closedNotchSize.height + (hoverAnimation ? 8 : 0), alignment: .center)
     }
@@ -149,7 +148,7 @@ struct InlineHUD: View {
 }
 
 #Preview {
-    InlineHUD(type: .constant(.brightness), value: .constant(0.4), icon: .constant(""), hoverAnimation: .constant(false), gestureProgress: .constant(0))
+    InlineHUD(type: .constant(.brightness), value: .constant(0.4), icon: .constant(""), hoverAnimation: .constant(false))
         .padding(.horizontal, 8)
         .background(Color.black)
         .padding()

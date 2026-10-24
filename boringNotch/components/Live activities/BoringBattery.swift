@@ -59,7 +59,7 @@ struct BatteryView: View {
                 )
                 .padding(.leading, 2)
 
-            if iconStatus != "" && (isForNotification || Defaults[.showPowerStatusIcons]) {
+            if iconStatus != "" && isForNotification {
                 ZStack {
                     Image(iconStatus)
                         .resizable()
@@ -177,7 +177,6 @@ struct BoringBatteryView: View {
     var maxCapacity: Float = 0
     var timeToFullCharge: Int = 0
     @State var isForNotification: Bool = false
-    var showsPercentage: Bool = true
     
     @State private var showPopupMenu: Bool = false
     @State private var isPressed: Bool = false
@@ -194,11 +193,6 @@ struct BoringBatteryView: View {
             }
         }) {
             HStack {
-                if showsPercentage && Defaults[.showBatteryPercentage] {
-                    Text("\(Int32(levelBattery))%")
-                        .font(.callout)
-                        .foregroundStyle(.white)
-                }
                 BatteryView(
                     levelBattery: levelBattery,
                     isPluggedIn: isPluggedIn,

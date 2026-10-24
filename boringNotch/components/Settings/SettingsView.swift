@@ -52,7 +52,10 @@ struct SettingsView: View {
                     Label("Shelf", systemImage: "books.vertical")
                 }
                 NavigationLink(value: "Agents") {
-                    Label("Agents", systemImage: "sparkles")
+                    HStack {
+                        Label("AI Agents", systemImage: "sparkles")
+                        customBadge(text: "Beta")
+                    }
                 }
                 NavigationLink(value: "Shortcuts") {
                     Label("Shortcuts", systemImage: "keyboard")
@@ -140,9 +143,7 @@ struct GeneralSettings: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject var coordinator = BoringViewCoordinator.shared
 
-    @Default(.mirrorShape) var mirrorShape
     @Default(.showEmojis) var showEmojis
-    @Default(.gestureSensitivity) var gestureSensitivity
     @Default(.minimumHoverDuration) var minimumHoverDuration
     @Default(.nonNotchHeight) var nonNotchHeight
     @Default(.nonNotchHeightMode) var nonNotchHeightMode
@@ -150,7 +151,6 @@ struct GeneralSettings: View {
     @Default(.notchHeightMode) var notchHeightMode
     @Default(.showOnAllDisplays) var showOnAllDisplays
     @Default(.automaticallySwitchDisplay) var automaticallySwitchDisplay
-    @Default(.enableGestures) var enableGestures
     @Default(.openNotchOnHover) var openNotchOnHover
     
 
@@ -266,7 +266,6 @@ struct GeneralSettings: View {
 
             NotchBehaviour()
 
-            gestureControls()
         }
         .toolbar {
             Button("Quit app") {
@@ -276,51 +275,6 @@ struct GeneralSettings: View {
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("General")
-        .onChange(of: openNotchOnHover) {
-            if !openNotchOnHover {
-                enableGestures = true
-            }
-        }
-    }
-
-    @ViewBuilder
-    func gestureControls() -> some View {
-        Section {
-            Defaults.Toggle(key: .enableGestures) {
-                Text("Enable gestures")
-            }
-                .disabled(!openNotchOnHover)
-            if enableGestures {
-                Toggle("Change media with horizontal gestures", isOn: .constant(false))
-                    .disabled(true)
-                Defaults.Toggle(key: .closeGestureEnabled) {
-                    Text("Close gesture")
-                }
-                Slider(value: $gestureSensitivity, in: 100...300, step: 100) {
-                    HStack {
-                        Text("Gesture sensitivity")
-                        Spacer()
-                        Text(
-                            Defaults[.gestureSensitivity] == 100
-                                ? "High" : Defaults[.gestureSensitivity] == 200 ? "Medium" : "Low"
-                        )
-                        .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        } header: {
-            HStack {
-                Text("Gesture control")
-                customBadge(text: "Beta")
-            }
-        } footer: {
-            Text(
-                "Two-finger swipe up on notch to close, two-finger swipe down on notch to open when **Open notch on hover** option is disabled"
-            )
-            .multilineTextAlignment(.trailing)
-            .foregroundStyle(.secondary)
-            .font(.caption)
-        }
     }
 
     @ViewBuilder
@@ -368,16 +322,6 @@ struct Charge: View {
                 }
             } header: {
                 Text("General")
-            }
-            Section {
-                Defaults.Toggle(key: .showBatteryPercentage) {
-                    Text("Show battery percentage")
-                }
-                Defaults.Toggle(key: .showPowerStatusIcons) {
-                    Text("Show power status icons")
-                }
-            } header: {
-                Text("Battery Information")
             }
         }
         .onAppear {
@@ -472,7 +416,6 @@ struct Charge: View {
 
 struct HUD: View {
     @EnvironmentObject var vm: BoringViewModel
-    @Default(.inlineHUD) var inlineHUD
     @Default(.enableGradient) var enableGradient
     @Default(.optionKeyAction) var optionKeyAction
     @Default(.hudReplacement) var hudReplacement
@@ -541,37 +484,15 @@ struct HUD: View {
             .disabled(!hudReplacement)
             
             Section {
-                Defaults.Toggle(key: .showOpenNotchHUD) {
-                    Text("Show HUD in open notch")
-                }
                 Defaults.Toggle(key: .showOpenNotchHUDPercentage) {
                     Text("Show percentage")
                 }
-                .disabled(!Defaults[.showOpenNotchHUD])
             } header: {
-                HStack {
-                    Text("Open Notch")
-                    customBadge(text: "Beta")
-                }
+                Text("Open Notch")
             }
             .disabled(!hudReplacement)
             
             Section {
-                Picker("HUD style", selection: $inlineHUD) {
-                    Text("Default")
-                        .tag(false)
-                    Text("Inline")
-                        .tag(true)
-                }
-                .onChange(of: Defaults[.inlineHUD]) {
-                    if Defaults[.inlineHUD] {
-                        withAnimation {
-                            Defaults[.systemEventIndicatorShadow] = false
-                            Defaults[.enableGradient] = false
-                        }
-                    }
-                }
-                
                 Defaults.Toggle(key: .showClosedNotchHUDPercentage) {
                     Text("Show percentage")
                 }
@@ -605,7 +526,6 @@ struct Media: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @Default(.hideNotchOption) var hideNotchOption
     @Default(.enableSneakPeek) private var enableSneakPeek
-    @Default(.sneakPeekStyles) var sneakPeekStyles
 
     @Default(.enableLyrics) var enableLyrics
 
@@ -653,11 +573,6 @@ struct Media: View {
                     isOn: $coordinator.musicLiveActivityEnabled.animation()
                 )
                 Toggle("Show sneak peek on playback changes", isOn: $enableSneakPeek)
-                Picker("Sneak Peek Style", selection: $sneakPeekStyles) {
-                    ForEach(SneakPeekStyle.allCases) { style in
-                        Text(style.rawValue).tag(style)
-                    }
-                }
                 HStack {
                     Stepper(value: $waitInterval, in: 0...10, step: 1) {
                         HStack {
@@ -1167,12 +1082,10 @@ struct Shelf: View {
 
 struct Appearance: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
-    @Default(.mirrorShape) var mirrorShape
     @Default(.sliderColor) var sliderColor
     @Default(.useMusicVisualizer) var useMusicVisualizer
     @Default(.customVisualizers) var customVisualizers
     @Default(.selectedVisualizer) var selectedVisualizer
-    @Default(.showNotchPet) var showNotchPet
 
     let icons: [String] = ["logo2"]
     @State private var selectedIcon: String = "logo2"
@@ -1387,20 +1300,9 @@ struct Appearance: View {
                     Text("Enable boring mirror")
                 }
                     .disabled(!checkVideoInput())
-                Picker("Mirror shape", selection: $mirrorShape) {
-                    Text("Circle")
-                        .tag(MirrorShapeEnum.circle)
-                    Text("Square")
-                        .tag(MirrorShapeEnum.rectangle)
-                }
                 Defaults.Toggle(key: .showNotchPet) {
                     Text("Show a pet in the closed notch while inactive")
                 }
-                Defaults.Toggle(key: .showNotHumanFace) {
-                    Text("Show cool face animation while inactive")
-                }
-                .disabled(showNotchPet)
-                .help(showNotchPet ? "The pet shows instead while it's turned on" : "")
             } header: {
                 HStack {
                     Text("Additional features")
