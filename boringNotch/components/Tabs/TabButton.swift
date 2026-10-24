@@ -16,7 +16,7 @@ struct TabButton: View {
     var body: some View {
         Button(action: onClick) {
             Image(systemName: icon)
-                .frame(width: openNotchTabWidth)
+                .frame(minWidth: openNotchTabWidth, maxWidth: 40)
                 .contentShape(Capsule())
         }
         .buttonStyle(PlainButtonStyle())

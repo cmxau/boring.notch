@@ -57,18 +57,19 @@ struct BoringHeader: View {
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
-                        if Defaults[.showBatteryIndicator] {
-                            BoringBatteryView(
-                                batteryWidth: 30,
-                                isCharging: batteryModel.isCharging,
-                                isInLowPowerMode: batteryModel.isInLowPowerMode,
-                                isPluggedIn: batteryModel.isPluggedIn,
-                                levelBattery: batteryModel.levelBattery,
-                                maxCapacity: batteryModel.maxCapacity,
-                                timeToFullCharge: batteryModel.timeToFullCharge,
-                                isForNotification: false
-                            )
+                        Button(action: {
+                            DispatchQueue.main.async {
+                                SettingsWindowController.shared.showWindow()
+                            }
+                        }) {
+                            Image(systemName: "gear")
+                                .foregroundColor(.white)
+                                .imageScale(.medium)
+                                .frame(width: 24, height: 30)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(PlainButtonStyle())
+                        .help("Settings")
                     }
                 }
             }

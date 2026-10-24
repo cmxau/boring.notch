@@ -16,13 +16,13 @@ import SwiftUI
 struct MusicPlayerView: View {
     @EnvironmentObject var vm: BoringViewModel
     let albumArtNamespace: Namespace.ID
-    /// Five control buttons don't fit in half of the home view; keep the middle three.
-    var dropsEdgeSlots = false
+    /// In half of the home view the control buttons sit closer together, so all the chosen ones still fit.
+    var isCompact = false
 
     static let albumArtSize: CGFloat = 52
 
     var body: some View {
-        MusicControlsView(dropsEdgeSlots: dropsEdgeSlots) {
+        MusicControlsView(isCompact: isCompact) {
             AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace)
                 .frame(width: Self.albumArtSize, height: Self.albumArtSize)
         }
@@ -117,7 +117,7 @@ struct AlbumArtView: View {
 struct MusicControlsView<AlbumArt: View>: View {
     /// Shown to the left of the song title.
     let albumArt: () -> AlbumArt
-    let dropsEdgeSlots: Bool
+    let isCompact: Bool
     @ObservedObject var musicManager = MusicManager.shared
     @State private var sliderValue: Double = 0
     @State private var dragging: Bool = false
@@ -125,8 +125,8 @@ struct MusicControlsView<AlbumArt: View>: View {
     @Default(.musicControlSlots) private var slotConfig
     @Default(.musicControlSlotLimit) private var slotLimit
 
-    init(dropsEdgeSlots: Bool = false, @ViewBuilder albumArt: @escaping () -> AlbumArt) {
-        self.dropsEdgeSlots = dropsEdgeSlots
+    init(isCompact: Bool = false, @ViewBuilder albumArt: @escaping () -> AlbumArt) {
+        self.isCompact = isCompact
         self.albumArt = albumArt
     }
 
@@ -163,39 +163,6 @@ struct MusicControlsView<AlbumArt: View>: View {
                 frameWidth: width
             )
             .fontWeight(.medium)
-            if Defaults[.enableLyrics] {
-                TimelineView(.animation(minimumInterval: 0.25)) { timeline in
-                    let currentElapsed: Double = {
-                        guard musicManager.isPlaying else { return musicManager.elapsedTime }
-                        let delta = timeline.date.timeIntervalSince(musicManager.timestampDate)
-                        let progressed = musicManager.elapsedTime + (delta * musicManager.playbackRate)
-                        return min(max(progressed, 0), musicManager.songDuration)
-                    }()
-                    let line: String = {
-                        if musicManager.isFetchingLyrics { return "Loading lyrics…" }
-                        if !musicManager.syncedLyrics.isEmpty {
-                            return musicManager.lyricLine(at: currentElapsed)
-                        }
-                        let trimmed = musicManager.currentLyrics.trimmingCharacters(in: .whitespacesAndNewlines)
-                        return trimmed.isEmpty ? "No lyrics found" : trimmed.replacingOccurrences(of: "\n", with: " ")
-                    }()
-                    let isPersian = line.unicodeScalars.contains { scalar in
-                        let v = scalar.value
-                        return v >= 0x0600 && v <= 0x06FF
-                    }
-                    MarqueeText(
-                        .constant(line),
-                        font: .caption,
-                        nsFont: .caption1,
-                        textColor: musicManager.isFetchingLyrics ? .gray.opacity(0.7) : .gray,
-                        frameWidth: width
-                    )
-                    .font(isPersian ? .custom("Vazirmatn-Regular", size: NSFont.preferredFont(forTextStyle: .caption1).pointSize) : .caption)
-                    .lineLimit(1)
-                    .opacity(musicManager.isPlaying ? 1 : 0)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-            }
         }
     }
 
@@ -222,7 +189,7 @@ struct MusicControlsView<AlbumArt: View>: View {
 
     private var slotToolbar: some View {
         let slots = activeSlots
-        return HStack(spacing: 6) {
+        return HStack(spacing: isCompact ? 0 : 6) {
             ForEach(Array(slots.enumerated()), id: \.offset) { index, slot in
                 slotView(for: slot)
                     .frame(alignment: .center)
@@ -238,10 +205,6 @@ struct MusicControlsView<AlbumArt: View>: View {
         )
         let padded = slotConfig.padded(to: sanitizedLimit, filler: .none)
         let result = Array(padded.prefix(sanitizedLimit))
-        if dropsEdgeSlots && result.count >= 5 {
-            return Array(result.dropFirst().dropLast())
-        }
-
         return result
     }
 
@@ -432,7 +395,8 @@ struct NotchHomeView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     let albumArtNamespace: Namespace.ID
 
-    @Default(.homeLayout) private var homeLayout
+    @Default(.homeLeftPane) private var homeLeftPane
+    @Default(.homeRightPane) private var homeRightPane
 
     var body: some View {
         Group {
@@ -446,7 +410,7 @@ struct NotchHomeView: View {
 
     /// The panes chosen in Settings, side by side in equal halves.
     private var mainContent: some View {
-        let panes = homeLayout.panes
+        let panes = HomePane.homePanes
         return HStack(alignment: .top, spacing: 12) {
             ForEach(panes, id: \.self) { pane in
                 paneView(pane, isHalf: panes.count > 1)
@@ -472,7 +436,7 @@ extension NotchHomeView {
         case .agents:
             AgentsHomePane()
         default:
-            MusicPlayerView(albumArtNamespace: albumArtNamespace, dropsEdgeSlots: isHalf)
+            MusicPlayerView(albumArtNamespace: albumArtNamespace, isCompact: isHalf)
         }
     }
 }
@@ -496,9 +460,7 @@ struct MusicSliderView: View {
             CustomSlider(
                 value: $sliderValue,
                 range: 0...duration,
-                color: Defaults[.sliderColor] == SliderColorEnum.albumArt
-                    ? Color(nsColor: color).ensureMinimumBrightness(factor: 0.8)
-                    : Defaults[.sliderColor] == SliderColorEnum.accent ? .effectiveAccent : .white,
+                color: .white,
                 dragging: $dragging,
                 lastDragged: $lastDragged,
                 onValueChange: onValueChange

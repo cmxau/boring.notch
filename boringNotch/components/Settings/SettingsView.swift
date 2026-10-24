@@ -162,13 +162,6 @@ struct GeneralSettings: View {
     var body: some View {
         Form {
             Section {
-                Toggle(isOn: Binding(
-                    get: { Defaults[.menubarIcon] },
-                    set: { Defaults[.menubarIcon] = $0 }
-                )) {
-                    Text("Show menu bar icon")
-                }
-                .tint(.effectiveAccent)
                 LaunchAtLogin.Toggle("Launch at login")
                 Defaults.Toggle(key: .showOnAllDisplays) {
                     Text("Show on all displays")
@@ -319,9 +312,6 @@ struct Charge: View {
     var body: some View {
         Form {
             Section {
-                Defaults.Toggle(key: .showBatteryIndicator) {
-                    Text("Show battery indicator")
-                }
                 Defaults.Toggle(key: .showPowerStatusNotifications) {
                     Text("Show power status notifications")
                 }
@@ -532,7 +522,6 @@ struct Media: View {
     @Default(.hideNotchOption) var hideNotchOption
     @Default(.enableSneakPeek) private var enableSneakPeek
 
-    @Default(.enableLyrics) var enableLyrics
 
     var body: some View {
         Form {
@@ -607,11 +596,8 @@ struct Media: View {
             
             Section {
                 MusicSlotConfigurationView()
-                Defaults.Toggle(key: .enableLyrics) {
-                    HStack {
-                        Text("Show lyrics below artist name")
-                        customBadge(text: "Beta")
-                    }
+                Defaults.Toggle(key: .lyricsUseAlbumColor) {
+                    Text("Tint lyrics with the album colour")
                 }
             } header: {
                 Text("Media controls")
@@ -628,7 +614,7 @@ struct Media: View {
     // Only show controller options that are available on this macOS version
     private var availableMediaControllers: [MediaControllerType] {
         if MusicManager.shared.isNowPlayingDeprecated {
-            return MediaControllerType.allCases.filter { $0 != .nowPlaying }
+            return MediaControllerType.allCases.filter { !$0.usesNowPlaying }
         } else {
             return MediaControllerType.allCases
         }
@@ -1121,15 +1107,10 @@ struct Shelf: View {
 
 struct Appearance: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
-    @Default(.sliderColor) var sliderColor
-    @Default(.useMusicVisualizer) var useMusicVisualizer
-    @Default(.customVisualizers) var customVisualizers
-    @Default(.selectedVisualizer) var selectedVisualizer
     @Default(.notchBackgroundStyle) var notchBackgroundStyle
 
     let icons: [String] = ["logo2"]
     @State private var selectedIcon: String = "logo2"
-    @State private var selectedListVisualizer: CustomVisualizer? = nil
     @State private var isPresented: Bool = false
     @State private var name: String = ""
     @State private var url: String = ""
@@ -1156,187 +1137,8 @@ struct Appearance: View {
                 Defaults.Toggle(key: .lightingEffect) {
                     Text("Enable blur effect behind album art")
                 }
-                Picker("Slider color", selection: $sliderColor) {
-                    ForEach(SliderColorEnum.allCases, id: \.self) { option in
-                        Text(option.rawValue)
-                    }
-                }
             } header: {
                 Text("Media")
-            }
-
-            Section {
-                Toggle(
-                    "Use music visualizer spectrogram",
-                    isOn: $useMusicVisualizer.animation()
-                )
-                .disabled(true)
-                if !useMusicVisualizer {
-                    if customVisualizers.count > 0 {
-                        Picker(
-                            "Selected animation",
-                            selection: $selectedVisualizer
-                        ) {
-                            ForEach(
-                                customVisualizers,
-                                id: \.self
-                            ) { visualizer in
-                                Text(visualizer.name)
-                                    .tag(visualizer)
-                            }
-                        }
-                    } else {
-                        HStack {
-                            Text("Selected animation")
-                            Spacer()
-                            Text("No custom animation available")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            } header: {
-                HStack {
-                    Text("Custom music live activity animation")
-                    customBadge(text: "Coming soon")
-                }
-            }
-
-            Section {
-                List {
-                    ForEach(customVisualizers, id: \.self) { visualizer in
-                        HStack {
-                            LottieView(
-                                url: visualizer.url, speed: visualizer.speed,
-                                loopMode: .loop
-                            )
-                            .frame(width: 30, height: 30, alignment: .center)
-                            Text(visualizer.name)
-                            Spacer(minLength: 0)
-                            if selectedVisualizer == visualizer {
-                                Text("selected")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.trailing, 8)
-                            }
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .padding(.vertical, 2)
-                        .background(
-                            selectedListVisualizer != nil
-                                ? selectedListVisualizer == visualizer
-                                    ? Color.effectiveAccent : Color.clear : Color.clear,
-                            in: RoundedRectangle(cornerRadius: 5)
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if selectedListVisualizer == visualizer {
-                                selectedListVisualizer = nil
-                                return
-                            }
-                            selectedListVisualizer = visualizer
-                        }
-                    }
-                }
-                .safeAreaPadding(
-                    EdgeInsets(top: 5, leading: 0, bottom: 5, trailing: 0)
-                )
-                .frame(minHeight: 120)
-                .actionBar {
-                    HStack(spacing: 5) {
-                        Button {
-                            name = ""
-                            url = ""
-                            speed = 1.0
-                            isPresented.toggle()
-                        } label: {
-                            Image(systemName: "plus")
-                                .foregroundStyle(.secondary)
-                                .contentShape(Rectangle())
-                        }
-                        Divider()
-                        Button {
-                            if selectedListVisualizer != nil {
-                                let visualizer = selectedListVisualizer!
-                                selectedListVisualizer = nil
-                                customVisualizers.remove(
-                                    at: customVisualizers.firstIndex(of: visualizer)!)
-                                if visualizer == selectedVisualizer && customVisualizers.count > 0 {
-                                    selectedVisualizer = customVisualizers[0]
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "minus")
-                                .foregroundStyle(.secondary)
-                                .contentShape(Rectangle())
-                        }
-                    }
-                }
-                .controlSize(.small)
-                .buttonStyle(PlainButtonStyle())
-                .overlay {
-                    if customVisualizers.isEmpty {
-                        Text("No custom visualizer")
-                            .foregroundStyle(Color(.secondaryLabelColor))
-                            .padding(.bottom, 22)
-                    }
-                }
-                .sheet(isPresented: $isPresented) {
-                    VStack(alignment: .leading) {
-                        Text("Add new visualizer")
-                            .font(.largeTitle.bold())
-                            .padding(.vertical)
-                        TextField("Name", text: $name)
-                        TextField("Lottie JSON URL", text: $url)
-                        HStack {
-                            Text("Speed")
-                            Spacer(minLength: 80)
-                            Text("\(speed, specifier: "%.1f")s")
-                                .multilineTextAlignment(.trailing)
-                                .foregroundStyle(.secondary)
-                            Slider(value: $speed, in: 0...2, step: 0.1)
-                        }
-                        .padding(.vertical)
-                        HStack {
-                            Button {
-                                isPresented.toggle()
-                            } label: {
-                                Text("Cancel")
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                            }
-
-                            Button {
-                                let visualizer: CustomVisualizer = .init(
-                                    UUID: UUID(),
-                                    name: name,
-                                    url: URL(string: url)!,
-                                    speed: speed
-                                )
-
-                                if !customVisualizers.contains(visualizer) {
-                                    customVisualizers.append(visualizer)
-                                }
-
-                                isPresented.toggle()
-                            } label: {
-                                Text("Add")
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                            }
-                            .buttonStyle(BorderedProminentButtonStyle())
-                        }
-                    }
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .controlSize(.extraLarge)
-                    .padding()
-                }
-            } header: {
-                HStack(spacing: 0) {
-                    Text("Custom vizualizers (Lottie)")
-                    if !Defaults[.customVisualizers].isEmpty {
-                        Text(" – \(Defaults[.customVisualizers].count)")
-                            .foregroundStyle(.secondary)
-                    }
-                }
             }
 
             Section {
@@ -1407,6 +1209,23 @@ struct Advanced: View {
     
     var body: some View {
         Form {
+            Section {
+                HStack {
+                    Button("Export Settings…") {
+                        SettingsTransfer.exportSettings()
+                    }
+                    Button("Import Settings…") {
+                        SettingsTransfer.importSettings()
+                    }
+                }
+            } header: {
+                Text("Backup")
+            } footer: {
+                Text("Saves your settings to a file, to keep a backup or move them to another Mac.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section {
                 VStack(alignment: .leading, spacing: 16) {
                     // Toggle between system and custom
@@ -1766,8 +1585,10 @@ func warningBadge(_ text: String, _ description: String) -> some View {
 
 /// Which tabs the open notch has, their order, and what Home shows.
 struct TabsSettings: View {
-    @Default(.homeLayout) var homeLayout
+    @Default(.homeLeftPane) var homeLeftPane
+    @Default(.homeRightPane) var homeRightPane
     @Default(.tabOrder) var tabOrder
+    @Default(.hiddenTabs) var hiddenTabs
     @Default(.showCalendar) var showCalendar
     @Default(.boringShelf) var boringShelf
     @Default(.agentIntegrationEnabled) var agentIntegrationEnabled
@@ -1775,9 +1596,14 @@ struct TabsSettings: View {
     var body: some View {
         Form {
             Section {
-                Picker("Home layout", selection: $homeLayout) {
-                    ForEach(HomeLayout.allCases) { layout in
-                        Text(layout.rawValue).tag(layout)
+                Picker("Home left", selection: $homeLeftPane) {
+                    ForEach(HomePane.allCases) { pane in
+                        Text(pane.rawValue).tag(pane)
+                    }
+                }
+                Picker("Home right", selection: $homeRightPane) {
+                    ForEach(HomePane.allCases) { pane in
+                        Text(pane.rawValue).tag(pane)
                     }
                 }
                 let order = Array(orderedTabViews.dropFirst())
@@ -1794,6 +1620,12 @@ struct TabsSettings: View {
                             customBadge(text: "Beta")
                         }
                         Spacer()
+                        Toggle("Show", isOn: visibility(of: view))
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .controlSize(.mini)
+                            .disabled(!isTabFeatureOn(view))
+                            .help(isTabFeatureOn(view) ? "Show or hide this tab" : "Turn on \(view.title) in its own settings first")
                         Button {
                             moveTab(at: index, by: -1, in: order)
                         } label: {
@@ -1812,13 +1644,37 @@ struct TabsSettings: View {
             } header: {
                 Text("Tabs")
             } footer: {
-                Text("Calendar, AI Agents and Shelf only show when they're turned on in their own settings.")
+                Text("AI Agents and Shelf can only be shown while they're turned on in their own settings.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("Tabs & Home")
+    }
+
+    /// Calendar's switch is the same as "Show Calendar tab" on the Calendar page; the others hide the tab only.
+    private func visibility(of view: NotchViews) -> Binding<Bool> {
+        if view == .calendar {
+            return $showCalendar
+        }
+        return Binding(
+            get: { !hiddenTabs.contains(view) && isTabFeatureOn(view) },
+            set: { show in
+                hiddenTabs.removeAll { $0 == view }
+                if !show {
+                    hiddenTabs.append(view)
+                }
+            }
+        )
+    }
+
+    private func isTabFeatureOn(_ view: NotchViews) -> Bool {
+        switch view {
+        case .agents: return agentIntegrationEnabled
+        case .shelf: return boringShelf
+        default: return true
+        }
     }
 
     private func moveTab(at index: Int, by offset: Int, in order: [NotchViews]) {

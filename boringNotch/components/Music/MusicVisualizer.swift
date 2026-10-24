@@ -104,7 +104,35 @@ class AudioSpectrum: NSView {
     }
 }
 
-struct AudioSpectrumView: NSViewRepresentable {
+/// The closed notch's equaliser: the real spectrum of what's playing, or an animation when system audio can't be
+/// captured.
+struct AudioSpectrumView: View {
+    @Binding var isPlaying: Bool
+    @ObservedObject private var spectrum = SystemAudioSpectrum.shared
+
+    var body: some View {
+        Group {
+            if spectrum.isLive {
+                HStack(spacing: 2) {
+                    ForEach(0..<SystemAudioSpectrum.bandCount, id: \.self) { band in
+                        Capsule()
+                            .fill(Color.white)
+                            .frame(width: 2, height: 14 * CGFloat(isPlaying ? max(0.2, spectrum.levels[band]) : 0.2))
+                    }
+                }
+                .frame(height: 14)
+                .animation(.linear(duration: 1.0 / 30), value: spectrum.levels)
+            } else {
+                AnimatedAudioSpectrumView(isPlaying: $isPlaying)
+            }
+        }
+        .onAppear { spectrum.retain() }
+        .onDisappear { spectrum.release() }
+    }
+}
+
+/// Bars that bounce while music plays, for when the real spectrum isn't available.
+struct AnimatedAudioSpectrumView: NSViewRepresentable {
     @Binding var isPlaying: Bool
     
     func makeNSView(context: Context) -> AudioSpectrum {

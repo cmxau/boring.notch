@@ -27,6 +27,12 @@ struct MusicTabView: View {
 /// The song's lyrics, following along with the music when they're synced.
 struct LyricsPanel: View {
     @ObservedObject var musicManager = MusicManager.shared
+    @Default(.lyricsUseAlbumColor) private var useAlbumColor
+
+    /// The current line's colour; the album's when tinting is on.
+    private var highlight: Color {
+        useAlbumColor ? Color(nsColor: musicManager.avgColor).ensureMinimumBrightness(factor: 0.7) : .white
+    }
 
     var body: some View {
         Group {
@@ -38,7 +44,7 @@ struct LyricsPanel: View {
                 ScrollView(.vertical, showsIndicators: false) {
                     Text(musicManager.currentLyrics)
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.85))
+                        .foregroundStyle(highlight.opacity(0.85))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } else {
@@ -57,7 +63,7 @@ struct LyricsPanel: View {
                         ForEach(Array(musicManager.syncedLyrics.enumerated()), id: \.offset) { index, line in
                             Text(line.text.isEmpty ? "♪" : line.text)
                                 .font(.system(size: index == current ? 14 : 12, weight: index == current ? .bold : .medium))
-                                .foregroundStyle(index == current ? .white : .gray.opacity(index < current ? 0.5 : 0.8))
+                                .foregroundStyle(index == current ? highlight : highlight.opacity(index < current ? 0.35 : 0.55))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .id(index)
                         }

@@ -22,6 +22,8 @@ struct HelloShape: Shape {
 
     /// Size of the coordinate space the path data was drawn in.
     static let viewBox = CGSize(width: 638, height: 200)
+    /// Height over width of the lettering.
+    static let aspectRatio: CGFloat = viewBox.height / viewBox.width
     /// Stroke width in `viewBox` units.
     static let strokeWidth: CGFloat = 14.8883
 

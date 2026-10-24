@@ -34,7 +34,6 @@ struct ContentView: View {
 
     @Namespace var albumArtNamespace
 
-    @Default(.useMusicVisualizer) var useMusicVisualizer
 
     @Default(.showNotchPet) var showNotchPet
 
@@ -169,7 +168,7 @@ struct ContentView: View {
                     .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
                     // The open notch is as wide as the closed notch playing music, plus room for the header
                     .frame(width: vm.notchState == .open ? vm.notchSize.width : nil)
-                    .background(NotchBackgroundView(isOpen: vm.notchState == .open))
+                    .background(NotchBackgroundView(isOpen: vm.notchState == .open || coordinator.helloAnimationRunning))
                     .clipShape(currentNotchShape)
                     .overlay(alignment: .top) {
                         Rectangle()
@@ -245,6 +244,14 @@ struct ContentView: View {
                             }
                         }
                         .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
+                        Divider()
+                        Button("Restart Boring Notch") {
+                            ApplicationRelauncher.restart()
+                        }
+                        Button("Quit") {
+                            NSApplication.shared.terminate(nil)
+                        }
+                        .keyboardShortcut(KeyEquivalent("q"), modifiers: .command)
                         //                    Button("Edit") { // Doesnt work....
                         //                        let dn = DynamicNotch(content: EditPanelView())
                         //                        dn.toggle()
@@ -297,15 +304,16 @@ struct ContentView: View {
         VStack(alignment: .leading) {
             VStack(alignment: .leading) {
                 if coordinator.helloAnimationRunning {
-                    Spacer()
+                    // Just tall enough for the lettering, below the camera
+                    let helloWidth = getClosedNotchSize().width
                     HelloAnimation(onFinish: {
                         vm.closeHello()
                     }).frame(
-                        width: getClosedNotchSize().width,
-                        height: 80
+                        width: helloWidth,
+                        height: helloWidth * HelloShape.aspectRatio
                     )
-                    .padding(.top, 40)
-                    Spacer()
+                    .padding(.top, vm.effectiveClosedNotchHeight + 4)
+                    .padding(.bottom, 10)
                 } else {
                     if coordinator.lockScreenIndicator != .hidden && vm.notchState == .closed {
                         LockIndicatorActivity()
@@ -372,7 +380,8 @@ struct ContentView: View {
                         NotchMirrorView(webcamManager: webcamManager)
                             .transition(.opacity)
                     } else {
-                        switch coordinator.currentView {
+                        // A tab hidden since it was last open falls back to Home
+                        switch isTabAvailable(coordinator.currentView) ? coordinator.currentView : .home {
                         case .home:
                             NotchHomeView(albumArtNamespace: albumArtNamespace)
                         case .music:
@@ -603,23 +612,18 @@ struct ContentView: View {
                 )
 
             HStack {
-                if useMusicVisualizer {
-                    Rectangle()
-                        .fill(
-                            Defaults[.coloredSpectrogram]
-                                ? Color(nsColor: musicManager.avgColor).gradient
-                                : Color.gray.gradient
-                        )
-                        .frame(width: 50, alignment: .center)
-                        .matchedGeometryEffect(id: "spectrum", in: albumArtNamespace)
-                        .mask {
-                            AudioSpectrumView(isPlaying: $musicManager.isPlaying)
-                                .frame(width: 16, height: 12)
-                        }
-                } else {
-                    LottieAnimationContainer()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
+                Rectangle()
+                    .fill(
+                        Defaults[.coloredSpectrogram]
+                            ? Color(nsColor: musicManager.avgColor).gradient
+                            : Color.gray.gradient
+                    )
+                    .frame(width: 50, alignment: .center)
+                    .matchedGeometryEffect(id: "spectrum", in: albumArtNamespace)
+                    .mask {
+                        AudioSpectrumView(isPlaying: $musicManager.isPlaying)
+                            .frame(width: 16, height: 12)
+                    }
             }
             .frame(
                 width: max(

@@ -28,6 +28,8 @@ var orderedTabViews: [NotchViews] {
 }
 
 func isTabAvailable(_ view: NotchViews) -> Bool {
+    if view == .home { return true }
+    if Defaults[.hiddenTabs].contains(view) { return false }
     switch view {
     case .home, .music: return true
     case .calendar: return Defaults[.showCalendar]
@@ -64,6 +66,7 @@ struct TabSelectionView: View {
             }
         }
         .clipShape(Capsule())
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

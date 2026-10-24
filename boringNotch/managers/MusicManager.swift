@@ -125,6 +125,9 @@ class MusicManager: ObservableObject {
             } else {
                 return nil
             }
+        case .amazonMusic, .soundCloud:
+            guard !self.isNowPlayingDeprecated else { return nil }
+            newController = AppNowPlayingController(bundleIdentifiers: type.appBundleIdentifiers)
         case .appleMusic:
             newController = AppleMusicController()
         case .spotify:
@@ -342,7 +345,7 @@ class MusicManager: ObservableObject {
 
     // MARK: - Lyrics
     private func fetchLyricsIfAvailable(bundleIdentifier: String?, title: String, artist: String) {
-        // Always fetched: the Music tab shows them. "Show lyrics" only adds a line under the artist on Home.
+        // Always fetched: the Music tab shows them
         guard !title.isEmpty else {
             DispatchQueue.main.async {
                 self.isFetchingLyrics = false

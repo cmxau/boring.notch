@@ -52,22 +52,28 @@ public enum NotchViews: String, CaseIterable, Defaults.Serializable {
     }
 }
 
-/// What the home tab shows: two panes side by side, or music alone.
-enum HomeLayout: String, CaseIterable, Identifiable, Defaults.Serializable {
-    case musicCalendar = "Music + Calendar"
-    case musicAgents = "Music + AI Agents"
-    case calendarAgents = "Calendar + AI Agents"
-    case music = "Music only"
+/// One half of the home tab.
+enum HomePane: String, CaseIterable, Identifiable, Defaults.Serializable {
+    case none = "None"
+    case music = "Music"
+    case calendar = "Calendar"
+    case agents = "AI Agents"
 
     var id: String { rawValue }
 
-    var panes: [NotchViews] {
+    var view: NotchViews? {
         switch self {
-        case .musicCalendar: return [.music, .calendar]
-        case .musicAgents: return [.music, .agents]
-        case .calendarAgents: return [.calendar, .agents]
-        case .music: return [.music]
+        case .none: return nil
+        case .music: return .music
+        case .calendar: return .calendar
+        case .agents: return .agents
         }
+    }
+
+    /// The home tab's panes, left to right. One chosen pane fills the whole width; none at all shows music.
+    static var homePanes: [NotchViews] {
+        let panes = [Defaults[.homeLeftPane], Defaults[.homeRightPane]].compactMap(\.view)
+        return panes.isEmpty ? [.music] : panes
     }
 }
 
@@ -99,8 +105,3 @@ enum WindowHeightMode: String, Defaults.Serializable {
     case custom = "Custom height"
 }
 
-enum SliderColorEnum: String, CaseIterable, Defaults.Serializable {
-    case white = "White"
-    case albumArt = "Match album art"
-    case accent = "Accent color"
-}
