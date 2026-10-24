@@ -37,6 +37,10 @@ struct ContentView: View {
     @Default(.useMusicVisualizer) var useMusicVisualizer
 
     @Default(.showNotHumanFace) var showNotHumanFace
+    @Default(.showNotchPet) var showNotchPet
+
+    /// The pointer is over the notch pet, which mustn't open the notch on hover so the cat can be clicked.
+    @State private var isHoveringPet = false
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
     private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
@@ -75,6 +79,20 @@ struct ContentView: View {
     /// Both sides of the accessory indicator share this width so the notch stays centred under the camera.
     private var accessoryWingWidth: CGFloat {
         max(accessoryArtworkSize, 66)
+    }
+
+    private var petSize: CGFloat {
+        max(0, vm.effectiveClosedNotchHeight - 4)
+    }
+
+    private var petWingWidth: CGFloat {
+        petSize * NotchPetClip.aspectRatio
+    }
+
+    /// The pet keeps the closed notch company when nothing else is showing.
+    private var showsPet: Bool {
+        showNotchPet && !coordinator.expandingView.show && vm.notchState == .closed
+            && !musicManager.isPlaying && musicManager.isPlayerIdle && !vm.hideOnClosed
     }
 
     /// What the closed notch shows for AI agents, if anything.
@@ -120,6 +138,8 @@ struct ContentView: View {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if agentActivity != nil && vm.notchState == .closed && !vm.hideOnClosed {
             chinWidth += (2 * accessoryWingWidth + 20)
+        } else if showsPet {
+            chinWidth += (2 * petWingWidth + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
             && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace]
             && !vm.hideOnClosed
@@ -348,6 +368,8 @@ struct ContentView: View {
                               .frame(alignment: .center)
                       } else if let activity = agentActivity, vm.notchState == .closed && !vm.hideOnClosed {
                           AgentLiveActivity(activity)
+                      } else if showsPet {
+                          NotchPetActivity()
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
                           BoringFaceAnimation()
                        } else if vm.notchState == .open {
@@ -489,6 +511,40 @@ struct ContentView: View {
         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(activity.kind.displayName): \(activity.label)")
+    }
+
+    @ViewBuilder
+    func NotchPetActivity() -> some View {
+        HStack {
+            NotchPetView(
+                size: petSize,
+                onOtherTap: { doOpen() },
+                onHover: { hovering in
+                    isHoveringPet = hovering
+                    guard !hovering else { return }
+                    // Moving from the cat to the rest of the notch opens it as if the pointer had just arrived.
+                    // Waits until a move off the notch altogether has cleared `isHovering`.
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(150))
+                        if isHovering && !isHoveringPet && vm.notchState == .closed {
+                            scheduleHoverOpen()
+                        }
+                    }
+                }
+            )
+            .frame(width: petWingWidth, alignment: .leading)
+
+            Rectangle()
+                .fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            // Mirrors the pet's width so the notch stays centred under the camera
+            Rectangle()
+                .fill(.clear)
+                .frame(width: petWingWidth, height: petSize)
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+        .onDisappear { isHoveringPet = false }
     }
 
     @ViewBuilder
@@ -655,22 +711,7 @@ struct ContentView: View {
                 haptics.toggle()
             }
             
-            guard vm.notchState == .closed,
-                  !coordinator.sneakPeek.show,
-                  Defaults[.openNotchOnHover] else { return }
-            
-            hoverTask = Task {
-                try? await Task.sleep(for: .seconds(Defaults[.minimumHoverDuration]))
-                guard !Task.isCancelled else { return }
-                
-                await MainActor.run {
-                    guard self.vm.notchState == .closed,
-                          self.isHovering,
-                          !self.coordinator.sneakPeek.show else { return }
-                    
-                    self.doOpen()
-                }
-            }
+            scheduleHoverOpen()
         } else {
             hoverTask = Task {
                 try? await Task.sleep(for: .milliseconds(100))
@@ -685,6 +726,28 @@ struct ContentView: View {
                         self.vm.close()
                     }
                 }
+            }
+        }
+    }
+
+    /// Opens the notch once the pointer has rested on it long enough, unless it's on the pet.
+    private func scheduleHoverOpen() {
+        guard vm.notchState == .closed,
+              !coordinator.sneakPeek.show,
+              Defaults[.openNotchOnHover] else { return }
+
+        hoverTask?.cancel()
+        hoverTask = Task {
+            try? await Task.sleep(for: .seconds(Defaults[.minimumHoverDuration]))
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard self.vm.notchState == .closed,
+                      self.isHovering,
+                      !self.isHoveringPet,
+                      !self.coordinator.sneakPeek.show else { return }
+
+                self.doOpen()
             }
         }
     }

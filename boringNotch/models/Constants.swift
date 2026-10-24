@@ -123,6 +123,8 @@ extension Defaults.Keys {
     static let cornerRadiusScaling = Key<Bool>("cornerRadiusScaling", default: true)
 
     static let showNotHumanFace = Key<Bool>("showNotHumanFace", default: false)
+    /// A cat in the closed notch while nothing else is showing
+    static let showNotchPet = Key<Bool>("showNotchPet", default: true)
     static let tileShowLabels = Key<Bool>("tileShowLabels", default: false)
     static let showCalendar = Key<Bool>("showCalendar", default: false)
     static let hideCompletedReminders = Key<Bool>("hideCompletedReminders", default: true)

@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E228F94B05D879C32CA0846 /* PetPlayingWithBall.gif in Resources */ = {isa = PBXBuildFile; fileRef = 760AD5E05E37163889363E3F /* PetPlayingWithBall.gif */; };
+		E7E36D419FA6CEC12447A876 /* PetPlayingWithTail.gif in Resources */ = {isa = PBXBuildFile; fileRef = 01DCB4F26F16557A41338DC8 /* PetPlayingWithTail.gif */; };
+		D6894781C70744185F3D4E71 /* PetWalking.gif in Resources */ = {isa = PBXBuildFile; fileRef = DBD5CEFF72C219C9866CB789 /* PetWalking.gif */; };
+		146423B5C34B233D6E9C336D /* PetResting.gif in Resources */ = {isa = PBXBuildFile; fileRef = 872E5ADA9138DA88BEFC39E4 /* PetResting.gif */; };
+		5AEE369B4F2DEE1B29974909 /* NotchPetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106A5FA685CC7A7F84E24DC2 /* NotchPetView.swift */; };
 		F38044E2221D29C996669AF4 /* AntigravityIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FE8F9DFE1FCB73F8179B66 /* AntigravityIntegration.swift */; };
 		C8FC30C0F7476CE3F42A41E6 /* unlock.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9F9B62C5C88F0CD84BA32F91 /* unlock.caf */; };
 		F9FEF6E4C4BBA102EF47C303 /* lock.caf in Resources */ = {isa = PBXBuildFile; fileRef = 03A7961367A0CF4B55DAB791 /* lock.caf */; };
@@ -224,6 +229,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		760AD5E05E37163889363E3F /* PetPlayingWithBall.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = PetPlayingWithBall.gif; sourceTree = "<group>"; };
+		01DCB4F26F16557A41338DC8 /* PetPlayingWithTail.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = PetPlayingWithTail.gif; sourceTree = "<group>"; };
+		DBD5CEFF72C219C9866CB789 /* PetWalking.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = PetWalking.gif; sourceTree = "<group>"; };
+		872E5ADA9138DA88BEFC39E4 /* PetResting.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = PetResting.gif; sourceTree = "<group>"; };
+		106A5FA685CC7A7F84E24DC2 /* NotchPetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPetView.swift; sourceTree = "<group>"; };
 		A7FE8F9DFE1FCB73F8179B66 /* AntigravityIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AntigravityIntegration.swift; sourceTree = "<group>"; };
 		9F9B62C5C88F0CD84BA32F91 /* unlock.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = unlock.caf; sourceTree = "<group>"; };
 		03A7961367A0CF4B55DAB791 /* lock.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lock.caf; sourceTree = "<group>"; };
@@ -443,6 +453,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		521FDC9A7B51100DE225E337 /* pets */ = {
+			isa = PBXGroup;
+			children = (
+				872E5ADA9138DA88BEFC39E4 /* PetResting.gif */,
+				DBD5CEFF72C219C9866CB789 /* PetWalking.gif */,
+				01DCB4F26F16557A41338DC8 /* PetPlayingWithTail.gif */,
+				760AD5E05E37163889363E3F /* PetPlayingWithBall.gif */,
+			);
+			path = pets;
+			sourceTree = "<group>";
+		};
 		85B8C41A663ADDE579509B00 /* sounds */ = {
 			isa = PBXGroup;
 			children = (
@@ -758,6 +779,7 @@
 				112FB72F2CCF12CC0015238C /* private */,
 				11CC44A12CEE614100C7244B /* BoringViewCoordinator.swift */,
 				85B8C41A663ADDE579509B00 /* sounds */,
+				521FDC9A7B51100DE225E337 /* pets */,
 			);
 			path = boringNotch;
 			sourceTree = "<group>";
@@ -886,6 +908,7 @@
 				14D570C52C5F38210011E668 /* BoringHeader.swift */,
 				14D570D12C5F6C6A0011E668 /* BoringExtrasMenu.swift */,
 				1471A8582C6281BD0058408D /* BoringNotchWindow.swift */,
+				106A5FA685CC7A7F84E24DC2 /* NotchPetView.swift */,
 			);
 			path = Notch;
 			sourceTree = "<group>";
@@ -1065,6 +1088,10 @@
 				112B0EB92E30DD0F00562D6C /* mediaremote-adapter.pl in Resources */,
 				B17266E12C6532560031BA0D /* Localizable.xcstrings in Resources */,
 				14A7E5972C65FD31008C1BE9 /* boring.m4a in Resources */,
+				5E228F94B05D879C32CA0846 /* PetPlayingWithBall.gif in Resources */,
+				E7E36D419FA6CEC12447A876 /* PetPlayingWithTail.gif in Resources */,
+				D6894781C70744185F3D4E71 /* PetWalking.gif in Resources */,
+				146423B5C34B233D6E9C336D /* PetResting.gif in Resources */,
 				C8FC30C0F7476CE3F42A41E6 /* unlock.caf in Resources */,
 				F9FEF6E4C4BBA102EF47C303 /* lock.caf in Resources */,
 				94B6E5175F304504252AF759 /* boring-agent-hook.sh in Resources */,
@@ -1192,6 +1219,7 @@
 				507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */,
 				1471A8592C6281BD0058408D /* BoringNotchWindow.swift in Sources */,
 				14CEF4182C5CAED300855D72 /* ContentView.swift in Sources */,
+				5AEE369B4F2DEE1B29974909 /* NotchPetView.swift in Sources */,
 				F38044E2221D29C996669AF4 /* AntigravityIntegration.swift in Sources */,
 				1DEC7579EE69C76F64E9EC1D /* AgentTerminalSettings.swift in Sources */,
 				B5E4686689953DC6F3AF8E83 /* AgentRemoteSettings.swift in Sources */,

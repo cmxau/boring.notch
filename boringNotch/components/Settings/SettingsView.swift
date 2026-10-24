@@ -1172,6 +1172,7 @@ struct Appearance: View {
     @Default(.useMusicVisualizer) var useMusicVisualizer
     @Default(.customVisualizers) var customVisualizers
     @Default(.selectedVisualizer) var selectedVisualizer
+    @Default(.showNotchPet) var showNotchPet
 
     let icons: [String] = ["logo2"]
     @State private var selectedIcon: String = "logo2"
@@ -1395,9 +1396,14 @@ struct Appearance: View {
                     Text("Square")
                         .tag(MirrorShapeEnum.rectangle)
                 }
+                Defaults.Toggle(key: .showNotchPet) {
+                    Text("Show a pet in the closed notch while inactive")
+                }
                 Defaults.Toggle(key: .showNotHumanFace) {
                     Text("Show cool face animation while inactive")
                 }
+                .disabled(showNotchPet)
+                .help(showNotchPet ? "The pet shows instead while it's turned on" : "")
             } header: {
                 HStack {
                     Text("Additional features")
