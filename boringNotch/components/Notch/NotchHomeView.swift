@@ -182,7 +182,7 @@ struct MusicControlsView<AlbumArt: View>: View {
                     MarqueeText(
                         .constant(line),
                         font: .caption,
-                        nsFont: .caption,
+                        nsFont: .caption1,
                         textColor: musicManager.isFetchingLyrics ? .gray.opacity(0.7) : .gray,
                         frameWidth: width
                     )
