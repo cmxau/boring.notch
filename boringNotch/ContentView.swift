@@ -24,6 +24,7 @@ struct ContentView: View {
     @ObservedObject var brightnessManager = BrightnessManager.shared
     @ObservedObject var volumeManager = VolumeManager.shared
     @ObservedObject var agentHub = AgentHub.shared
+    @ObservedObject var eventNotifier = CalendarEventNotifier.shared
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
     @State private var anyDropDebounceTask: Task<Void, Never>?
@@ -98,6 +99,9 @@ struct ContentView: View {
             && !musicManager.isPlaying && musicManager.isPlayerIdle && !vm.hideOnClosed
     }
 
+    /// Room either side of the camera for an upcoming calendar event's title and time.
+    private let eventWingWidth: CGFloat = 110
+
     /// What the closed notch shows for AI agents, if anything.
     private var agentActivity: (kind: AgentKind, status: AgentStatus, label: String)? {
         guard Defaults[.agentShowInClosedNotch], Defaults[.agentIntegrationEnabled] else { return nil }
@@ -128,6 +132,8 @@ struct ContentView: View {
             chinWidth += (2 * lockIndicatorSlotSize + 20)
         } else if coordinator.accessoryIndicator != nil && vm.notchState == .closed {
             chinWidth += (2 * accessoryWingWidth + 20)
+        } else if eventNotifier.alert != nil && vm.notchState == .closed {
+            chinWidth += (2 * eventWingWidth + 20)
         } else if agentActivityIsUrgent && vm.notchState == .closed {
             chinWidth += (2 * accessoryWingWidth + 20)
         } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
@@ -305,6 +311,8 @@ struct ContentView: View {
                         LockIndicatorActivity()
                     } else if let accessory = coordinator.accessoryIndicator, vm.notchState == .closed {
                         AccessoryConnectedActivity(accessory)
+                    } else if let alert = eventNotifier.alert, vm.notchState == .closed {
+                        CalendarEventActivity(alert)
                     } else if agentActivityIsUrgent, let activity = agentActivity, vm.notchState == .closed {
                         AgentLiveActivity(activity)
                     } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
@@ -434,6 +442,45 @@ struct ContentView: View {
         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(accessory.name) connected")
+    }
+
+    @ViewBuilder
+    func CalendarEventActivity(_ alert: CalendarEventAlert) -> some View {
+        let tint = Color(nsColor: alert.event.calendar.color)
+        HStack {
+            HStack(spacing: 6) {
+                Image(systemName: "calendar")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(tint)
+                Text(alert.event.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            .frame(width: eventWingWidth, alignment: .leading)
+
+            Rectangle()
+                .fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            Group {
+                if alert.moment == .now {
+                    Text("Now")
+                } else {
+                    Text(alert.event.start, style: .relative)
+                }
+            }
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(tint)
+            .lineLimit(1)
+            .monospacedDigit()
+            .frame(width: eventWingWidth, alignment: .trailing)
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+        .transition(.opacity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(alert.moment == .now ? "\(alert.event.title) is starting" : "\(alert.event.title) starts soon")
     }
 
     @ViewBuilder

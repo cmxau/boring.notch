@@ -13,6 +13,12 @@ let downloadSneakSize: CGSize = .init(width: 65, height: 1)
 let batterySneakSize: CGSize = .init(width: 160, height: 1)
 
 let shadowPadding: CGFloat = 20
+
+/// This fork's GitHub pages.
+enum AppLinks {
+    static let repository = URL(string: "https://github.com/cmxau/boring.notch")!
+    static let reportBug = URL(string: "https://github.com/cmxau/boring.notch/issues/new")!
+}
 /// The widest the open notch gets, and its height. Its width follows the closed notch; see `openNotchWidth`.
 let openNotchSize: CGSize = .init(width: 640, height: 190)
 /// How much wider the open notch is than the closed notch while music plays, so the header keeps the tabs on the

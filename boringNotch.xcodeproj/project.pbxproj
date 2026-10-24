@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3869AF6DB8C2CEF96FB63696 /* CalendarEventNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9229264F1523D3DB4CDC9B1F /* CalendarEventNotifier.swift */; };
 		FA8FE7C3921CD2167E85C9C2 /* NotchTabViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0D118510229A5F3B521A72 /* NotchTabViews.swift */; };
 		3F5A7C7B5EF2A5B3DAD783EE /* NotchBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2C7BAC7DA093194050FB3E /* NotchBackgroundView.swift */; };
 		5E228F94B05D879C32CA0846 /* PetPlayingWithBall.gif in Resources */ = {isa = PBXBuildFile; fileRef = 760AD5E05E37163889363E3F /* PetPlayingWithBall.gif */; };
@@ -229,6 +230,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9229264F1523D3DB4CDC9B1F /* CalendarEventNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEventNotifier.swift; sourceTree = "<group>"; };
 		CE0D118510229A5F3B521A72 /* NotchTabViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchTabViews.swift; sourceTree = "<group>"; };
 		9C2C7BAC7DA093194050FB3E /* NotchBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchBackgroundView.swift; sourceTree = "<group>"; };
 		760AD5E05E37163889363E3F /* PetPlayingWithBall.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = PetPlayingWithBall.gif; sourceTree = "<group>"; };
@@ -709,6 +711,7 @@
 				14C08BB52C8DE42D000F8AA0 /* CalendarManager.swift */,
 				B1F0A0012E60000100000001 /* BrightnessManager.swift */,
 				59D8C23B2E589FAA00147B33 /* VolumeManager.swift */,
+				9229264F1523D3DB4CDC9B1F /* CalendarEventNotifier.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -1218,6 +1221,7 @@
 				507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */,
 				1471A8592C6281BD0058408D /* BoringNotchWindow.swift in Sources */,
 				14CEF4182C5CAED300855D72 /* ContentView.swift in Sources */,
+				3869AF6DB8C2CEF96FB63696 /* CalendarEventNotifier.swift in Sources */,
 				FA8FE7C3921CD2167E85C9C2 /* NotchTabViews.swift in Sources */,
 				3F5A7C7B5EF2A5B3DAD783EE /* NotchBackgroundView.swift in Sources */,
 				5AEE369B4F2DEE1B29974909 /* NotchPetView.swift in Sources */,

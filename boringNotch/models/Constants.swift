@@ -121,6 +121,9 @@ extension Defaults.Keys {
     static let notchBackgroundStyle = Key<NotchBackgroundStyle>("notchBackgroundStyle", default: .black)
     static let tileShowLabels = Key<Bool>("tileShowLabels", default: false)
     static let showCalendar = Key<Bool>("showCalendar", default: false)
+    /// Show upcoming events in the closed notch before they start, and when they start
+    static let calendarEventNotifications = Key<Bool>("calendarEventNotifications", default: true)
+    static let calendarEventLeadMinutes = Key<Int>("calendarEventLeadMinutes", default: 5)
     static let hideCompletedReminders = Key<Bool>("hideCompletedReminders", default: true)
     static let sliderColor = Key<SliderColorEnum>(
         "sliderUseAlbumArtColor",

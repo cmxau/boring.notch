@@ -27,47 +27,50 @@ struct SettingsView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedTab) {
-                NavigationLink(value: "General") {
-                    Label("General", systemImage: "gear")
-                }
-                NavigationLink(value: "Appearance") {
-                    Label("Appearance", systemImage: "eye")
-                }
-                NavigationLink(value: "Media") {
-                    Label("Media", systemImage: "play.laptopcomputer")
-                }
-                NavigationLink(value: "Calendar") {
-                    Label("Calendar", systemImage: "calendar")
-                }
-                NavigationLink(value: "HUD") {
-                    Label("HUDs", systemImage: "dial.medium.fill")
-                }
-                NavigationLink(value: "Battery") {
-                    Label("Battery", systemImage: "battery.100.bolt")
-                }
-//                NavigationLink(value: "Downloads") {
-//                    Label("Downloads", systemImage: "square.and.arrow.down")
-//                }
-                NavigationLink(value: "Shelf") {
-                    Label("Shelf", systemImage: "books.vertical")
-                }
-                NavigationLink(value: "Agents") {
-                    HStack {
-                        Label("AI Agents", systemImage: "sparkles")
-                        customBadge(text: "Beta")
+                Section("Notch") {
+                    NavigationLink(value: "General") {
+                        Label("General", systemImage: "gear")
+                    }
+                    NavigationLink(value: "Appearance") {
+                        Label("Appearance", systemImage: "paintbrush")
+                    }
+                    NavigationLink(value: "Tabs") {
+                        Label("Tabs & Home", systemImage: "square.grid.2x2")
+                    }
+                    NavigationLink(value: "HUD") {
+                        Label("HUDs", systemImage: "dial.medium.fill")
                     }
                 }
-                NavigationLink(value: "Shortcuts") {
-                    Label("Shortcuts", systemImage: "keyboard")
+                Section("Features") {
+                    NavigationLink(value: "Media") {
+                        Label("Music", systemImage: "music.note")
+                    }
+                    NavigationLink(value: "Calendar") {
+                        Label("Calendar", systemImage: "calendar")
+                    }
+                    NavigationLink(value: "Agents") {
+                        HStack {
+                            Label("AI Agents", systemImage: "sparkles")
+                            customBadge(text: "Beta")
+                        }
+                    }
+                    NavigationLink(value: "Shelf") {
+                        Label("Shelf", systemImage: "tray.fill")
+                    }
+                    NavigationLink(value: "Battery") {
+                        Label("Battery", systemImage: "battery.100.bolt")
+                    }
                 }
-                // NavigationLink(value: "Extensions") {
-                //     Label("Extensions", systemImage: "puzzlepiece.extension")
-                // }
-                NavigationLink(value: "Advanced") {
-                    Label("Advanced", systemImage: "gearshape.2")
-                }
-                NavigationLink(value: "About") {
-                    Label("About", systemImage: "info.circle")
+                Section("App") {
+                    NavigationLink(value: "Shortcuts") {
+                        Label("Shortcuts", systemImage: "keyboard")
+                    }
+                    NavigationLink(value: "Advanced") {
+                        Label("Advanced", systemImage: "gearshape.2")
+                    }
+                    NavigationLink(value: "About") {
+                        Label("About", systemImage: "info.circle")
+                    }
                 }
             }
             .listStyle(SidebarListStyle())
@@ -81,6 +84,8 @@ struct SettingsView: View {
                     GeneralSettings()
                 case "Appearance":
                     Appearance()
+                case "Tabs":
+                    TabsSettings()
                 case "Media":
                     Media()
                 case "Calendar":
@@ -617,7 +622,7 @@ struct Media: View {
             }
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("Media")
+        .navigationTitle("Music")
     }
 
     // Only show controller options that are available on this macOS version
@@ -636,23 +641,49 @@ struct CalendarSettings: View {
     @Default(.hideCompletedReminders) var hideCompletedReminders
     @Default(.hideAllDayEvents) var hideAllDayEvents
     @Default(.autoScrollToNextEvent) var autoScrollToNextEvent
+    @Default(.calendarEventNotifications) var calendarEventNotifications
+    @Default(.calendarEventLeadMinutes) var calendarEventLeadMinutes
 
     var body: some View {
         Form {
-            Defaults.Toggle(key: .showCalendar) {
-                Text("Show calendar")
+            Section {
+                Defaults.Toggle(key: .showCalendar) {
+                    Text("Show Calendar tab")
+                }
+                Defaults.Toggle(key: .hideCompletedReminders) {
+                    Text("Hide completed reminders")
+                }
+                Defaults.Toggle(key: .hideAllDayEvents) {
+                    Text("Hide all-day events")
+                }
+                Defaults.Toggle(key: .autoScrollToNextEvent) {
+                    Text("Auto-scroll to next event")
+                }
+                Defaults.Toggle(key: .showFullEventTitles) {
+                    Text("Always show full event titles")
+                }
+            } header: {
+                Text("General")
             }
-            Defaults.Toggle(key: .hideCompletedReminders) {
-                Text("Hide completed reminders")
-            }
-            Defaults.Toggle(key: .hideAllDayEvents) {
-                Text("Hide all-day events")
-            }
-            Defaults.Toggle(key: .autoScrollToNextEvent) {
-                Text("Auto-scroll to next event")
-            }
-            Defaults.Toggle(key: .showFullEventTitles) {
-                Text("Always show full event titles")
+            Section {
+                Defaults.Toggle(key: .calendarEventNotifications) {
+                    Text("Show upcoming events in the notch")
+                }
+                Stepper(value: $calendarEventLeadMinutes, in: 1...30) {
+                    HStack {
+                        Text("Remind me before")
+                        Spacer()
+                        Text("\(calendarEventLeadMinutes) min")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .disabled(!calendarEventNotifications)
+            } header: {
+                Text("Event notifications")
+            } footer: {
+                Text("The closed notch shows the event's title before it starts, and again when it starts.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             Section(header: Text("Calendars")) {
                 if calendarManager.calendarAuthorizationStatus != .fullAccess {
@@ -793,9 +824,17 @@ struct About: View {
                 HStack(spacing: 30) {
                     Spacer(minLength: 0)
                     Button {
-                        if let url = URL(string: "https://github.com/TheBoredTeam/boring.notch") {
-                            NSWorkspace.shared.open(url)
+                        NSWorkspace.shared.open(AppLinks.reportBug)
+                    } label: {
+                        VStack(spacing: 5) {
+                            Image(systemName: "ladybug")
+                                .frame(height: 18)
+                            Text("Report a bug")
                         }
+                        .contentShape(Rectangle())
+                    }
+                    Button {
+                        NSWorkspace.shared.open(AppLinks.repository)
                     } label: {
                         VStack(spacing: 5) {
                             Image("Github")
@@ -1087,8 +1126,6 @@ struct Appearance: View {
     @Default(.customVisualizers) var customVisualizers
     @Default(.selectedVisualizer) var selectedVisualizer
     @Default(.notchBackgroundStyle) var notchBackgroundStyle
-    @Default(.homeLayout) var homeLayout
-    @Default(.tabOrder) var tabOrder
 
     let icons: [String] = ["logo2"]
     @State private var selectedIcon: String = "logo2"
@@ -1106,51 +1143,9 @@ struct Appearance: View {
                     }
                 }
             } header: {
-                Text("General")
+                Text("Notch")
             }
 
-            Section {
-                Picker("Home layout", selection: $homeLayout) {
-                    ForEach(HomeLayout.allCases) { layout in
-                        Text(layout.rawValue).tag(layout)
-                    }
-                }
-                let order = Array(orderedTabViews.dropFirst())
-                HStack {
-                    Label(NotchViews.home.title, systemImage: NotchViews.home.icon)
-                    Spacer()
-                    Text("Always first")
-                        .foregroundStyle(.secondary)
-                }
-                ForEach(Array(order.enumerated()), id: \.element) { index, view in
-                    HStack {
-                        Label(view.title, systemImage: view.icon)
-                        if view == .agents {
-                            customBadge(text: "Beta")
-                        }
-                        Spacer()
-                        Button {
-                            moveTab(at: index, by: -1, in: order)
-                        } label: {
-                            Image(systemName: "chevron.up")
-                        }
-                        .disabled(index == 0)
-                        Button {
-                            moveTab(at: index, by: 1, in: order)
-                        } label: {
-                            Image(systemName: "chevron.down")
-                        }
-                        .disabled(index == order.count - 1)
-                    }
-                    .buttonStyle(.borderless)
-                }
-            } header: {
-                Text("Tabs")
-            } footer: {
-                Text("Calendar, AI Agents and Shelf only show when they're turned on in their own settings.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
 
             Section {
                 Defaults.Toggle(key: .coloredSpectrogram) {
@@ -1360,14 +1355,6 @@ struct Appearance: View {
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("Appearance")
-    }
-
-    private func moveTab(at index: Int, by offset: Int, in order: [NotchViews]) {
-        var order = order
-        let target = index + offset
-        guard order.indices.contains(index), order.indices.contains(target) else { return }
-        order.swapAt(index, target)
-        tabOrder = order
     }
 
     func checkVideoInput() -> Bool {
@@ -1775,4 +1762,71 @@ func warningBadge(_ text: String, _ description: String) -> some View {
 
 #Preview {
     HUD()
+}
+
+/// Which tabs the open notch has, their order, and what Home shows.
+struct TabsSettings: View {
+    @Default(.homeLayout) var homeLayout
+    @Default(.tabOrder) var tabOrder
+    @Default(.showCalendar) var showCalendar
+    @Default(.boringShelf) var boringShelf
+    @Default(.agentIntegrationEnabled) var agentIntegrationEnabled
+
+    var body: some View {
+        Form {
+            Section {
+                Picker("Home layout", selection: $homeLayout) {
+                    ForEach(HomeLayout.allCases) { layout in
+                        Text(layout.rawValue).tag(layout)
+                    }
+                }
+                let order = Array(orderedTabViews.dropFirst())
+                HStack {
+                    Label(NotchViews.home.title, systemImage: NotchViews.home.icon)
+                    Spacer()
+                    Text("Always first")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(Array(order.enumerated()), id: \.element) { index, view in
+                    HStack {
+                        Label(view.title, systemImage: view.icon)
+                        if view == .agents {
+                            customBadge(text: "Beta")
+                        }
+                        Spacer()
+                        Button {
+                            moveTab(at: index, by: -1, in: order)
+                        } label: {
+                            Image(systemName: "chevron.up")
+                        }
+                        .disabled(index == 0)
+                        Button {
+                            moveTab(at: index, by: 1, in: order)
+                        } label: {
+                            Image(systemName: "chevron.down")
+                        }
+                        .disabled(index == order.count - 1)
+                    }
+                    .buttonStyle(.borderless)
+                }
+            } header: {
+                Text("Tabs")
+            } footer: {
+                Text("Calendar, AI Agents and Shelf only show when they're turned on in their own settings.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .accentColor(.effectiveAccent)
+        .navigationTitle("Tabs & Home")
+    }
+
+    private func moveTab(at index: Int, by offset: Int, in order: [NotchViews]) {
+        var order = order
+        let target = index + offset
+        guard order.indices.contains(index), order.indices.contains(target) else { return }
+        order.swapAt(index, target)
+        tabOrder = order
+    }
+
 }
