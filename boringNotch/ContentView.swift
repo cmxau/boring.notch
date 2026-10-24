@@ -163,7 +163,7 @@ struct ContentView: View {
                     .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
                     // The open notch is as wide as the closed notch playing music, plus room for the header
                     .frame(width: vm.notchState == .open ? vm.notchSize.width : nil)
-                    .background(.black)
+                    .background(NotchBackgroundView(isOpen: vm.notchState == .open))
                     .clipShape(currentNotchShape)
                     .overlay(alignment: .top) {
                         Rectangle()
@@ -367,6 +367,10 @@ struct ContentView: View {
                         switch coordinator.currentView {
                         case .home:
                             NotchHomeView(albumArtNamespace: albumArtNamespace)
+                        case .music:
+                            MusicTabView(albumArtNamespace: albumArtNamespace)
+                        case .calendar:
+                            CalendarTabView()
                         case .shelf:
                             ShelfView()
                         case .agents:

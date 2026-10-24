@@ -1086,6 +1086,9 @@ struct Appearance: View {
     @Default(.useMusicVisualizer) var useMusicVisualizer
     @Default(.customVisualizers) var customVisualizers
     @Default(.selectedVisualizer) var selectedVisualizer
+    @Default(.notchBackgroundStyle) var notchBackgroundStyle
+    @Default(.homeLayout) var homeLayout
+    @Default(.tabOrder) var tabOrder
 
     let icons: [String] = ["logo2"]
     @State private var selectedIcon: String = "logo2"
@@ -1097,10 +1100,56 @@ struct Appearance: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Always show tabs", isOn: $coordinator.alwaysShowTabs)
-
+                Picker("Open notch background", selection: $notchBackgroundStyle) {
+                    ForEach(NotchBackgroundStyle.allCases) { style in
+                        Text(style.rawValue).tag(style)
+                    }
+                }
             } header: {
                 Text("General")
+            }
+
+            Section {
+                Picker("Home layout", selection: $homeLayout) {
+                    ForEach(HomeLayout.allCases) { layout in
+                        Text(layout.rawValue).tag(layout)
+                    }
+                }
+                let order = Array(orderedTabViews.dropFirst())
+                HStack {
+                    Label(NotchViews.home.title, systemImage: NotchViews.home.icon)
+                    Spacer()
+                    Text("Always first")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(Array(order.enumerated()), id: \.element) { index, view in
+                    HStack {
+                        Label(view.title, systemImage: view.icon)
+                        if view == .agents {
+                            customBadge(text: "Beta")
+                        }
+                        Spacer()
+                        Button {
+                            moveTab(at: index, by: -1, in: order)
+                        } label: {
+                            Image(systemName: "chevron.up")
+                        }
+                        .disabled(index == 0)
+                        Button {
+                            moveTab(at: index, by: 1, in: order)
+                        } label: {
+                            Image(systemName: "chevron.down")
+                        }
+                        .disabled(index == order.count - 1)
+                    }
+                    .buttonStyle(.borderless)
+                }
+            } header: {
+                Text("Tabs")
+            } footer: {
+                Text("Calendar, AI Agents and Shelf only show when they're turned on in their own settings.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section {
@@ -1311,6 +1360,14 @@ struct Appearance: View {
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("Appearance")
+    }
+
+    private func moveTab(at index: Int, by offset: Int, in order: [NotchViews]) {
+        var order = order
+        let target = index + offset
+        guard order.indices.contains(index), order.indices.contains(target) else { return }
+        order.swapAt(index, target)
+        tabOrder = order
     }
 
     func checkVideoInput() -> Bool {

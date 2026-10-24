@@ -191,7 +191,7 @@ class BoringViewModel: NSObject, ObservableObject {
 
     func open() {
         self.notchSize = CGSize(
-            width: openNotchWidth(closedNotchSize: closedNotchSize, closedNotchHeight: closedNotchSize.height),
+            width: openNotchWidth(closedNotchSize: closedNotchSize, closedNotchHeight: closedNotchSize.height, tabCount: tabs.count),
             height: openNotchSize.height
         )
         self.notchState = .open

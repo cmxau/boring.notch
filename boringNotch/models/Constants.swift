@@ -114,6 +114,11 @@ extension Defaults.Keys {
 
     /// A cat in the closed notch while nothing else is showing
     static let showNotchPet = Key<Bool>("showNotchPet", default: true)
+    /// The order of the tabs after Home, which always comes first
+    static let tabOrder = Key<[NotchViews]>("tabOrder", default: [.music, .calendar, .agents, .shelf])
+    static let homeLayout = Key<HomeLayout>("homeLayout", default: .musicCalendar)
+    /// What the open notch is drawn on
+    static let notchBackgroundStyle = Key<NotchBackgroundStyle>("notchBackgroundStyle", default: .black)
     static let tileShowLabels = Key<Bool>("tileShowLabels", default: false)
     static let showCalendar = Key<Bool>("showCalendar", default: false)
     static let hideCompletedReminders = Key<Bool>("hideCompletedReminders", default: true)

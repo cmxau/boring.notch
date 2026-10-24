@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FA8FE7C3921CD2167E85C9C2 /* NotchTabViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0D118510229A5F3B521A72 /* NotchTabViews.swift */; };
+		3F5A7C7B5EF2A5B3DAD783EE /* NotchBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2C7BAC7DA093194050FB3E /* NotchBackgroundView.swift */; };
 		5E228F94B05D879C32CA0846 /* PetPlayingWithBall.gif in Resources */ = {isa = PBXBuildFile; fileRef = 760AD5E05E37163889363E3F /* PetPlayingWithBall.gif */; };
 		E7E36D419FA6CEC12447A876 /* PetPlayingWithTail.gif in Resources */ = {isa = PBXBuildFile; fileRef = 01DCB4F26F16557A41338DC8 /* PetPlayingWithTail.gif */; };
 		D6894781C70744185F3D4E71 /* PetWalking.gif in Resources */ = {isa = PBXBuildFile; fileRef = DBD5CEFF72C219C9866CB789 /* PetWalking.gif */; };
@@ -227,6 +229,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CE0D118510229A5F3B521A72 /* NotchTabViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchTabViews.swift; sourceTree = "<group>"; };
+		9C2C7BAC7DA093194050FB3E /* NotchBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchBackgroundView.swift; sourceTree = "<group>"; };
 		760AD5E05E37163889363E3F /* PetPlayingWithBall.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = PetPlayingWithBall.gif; sourceTree = "<group>"; };
 		01DCB4F26F16557A41338DC8 /* PetPlayingWithTail.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = PetPlayingWithTail.gif; sourceTree = "<group>"; };
 		DBD5CEFF72C219C9866CB789 /* PetWalking.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = PetWalking.gif; sourceTree = "<group>"; };
@@ -903,6 +907,8 @@
 				14D570D12C5F6C6A0011E668 /* BoringExtrasMenu.swift */,
 				1471A8582C6281BD0058408D /* BoringNotchWindow.swift */,
 				106A5FA685CC7A7F84E24DC2 /* NotchPetView.swift */,
+				9C2C7BAC7DA093194050FB3E /* NotchBackgroundView.swift */,
+				CE0D118510229A5F3B521A72 /* NotchTabViews.swift */,
 			);
 			path = Notch;
 			sourceTree = "<group>";
@@ -1212,6 +1218,8 @@
 				507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */,
 				1471A8592C6281BD0058408D /* BoringNotchWindow.swift in Sources */,
 				14CEF4182C5CAED300855D72 /* ContentView.swift in Sources */,
+				FA8FE7C3921CD2167E85C9C2 /* NotchTabViews.swift in Sources */,
+				3F5A7C7B5EF2A5B3DAD783EE /* NotchBackgroundView.swift in Sources */,
 				5AEE369B4F2DEE1B29974909 /* NotchPetView.swift in Sources */,
 				F38044E2221D29C996669AF4 /* AntigravityIntegration.swift in Sources */,
 				1DEC7579EE69C76F64E9EC1D /* AgentTerminalSettings.swift in Sources */,

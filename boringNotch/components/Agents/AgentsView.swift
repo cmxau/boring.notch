@@ -120,3 +120,34 @@ private struct AgentSessionSummary: View {
         }
     }
 }
+
+// MARK: - Home pane
+
+/// The AI agents half of the home tab: what an agent is waiting on, or the running sessions.
+struct AgentsHomePane: View {
+    @ObservedObject var hub = AgentHub.shared
+
+    var body: some View {
+        if let request = hub.requests.first {
+            AgentRequestCard(
+                request: request,
+                session: hub.sessions[request.sessionID],
+                pendingCount: hub.requests.count
+            )
+            .id(request.id)
+        } else if hub.sessions.isEmpty {
+            VStack(spacing: 6) {
+                Image(systemName: "sparkles")
+                    .font(.title2)
+                    .foregroundStyle(.gray)
+                Text("No agents running")
+                    .font(.subheadline)
+                    .foregroundStyle(.gray)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            AgentSessionList(sessions: hub.orderedSessions, highlighted: nil)
+                .padding(.top, 4)
+        }
+    }
+}

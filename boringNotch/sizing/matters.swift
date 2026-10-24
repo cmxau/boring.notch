@@ -40,11 +40,16 @@ enum MusicPlayerImageSizes {
     return nil
 }
 
+/// Width of one tab button in the open notch's header.
+let openNotchTabWidth: CGFloat = 24
+
 /// The open notch's width: the closed notch with music playing (album art, camera, equaliser) plus
-/// `openNotchExtraWidth`.
-func openNotchWidth(closedNotchSize: CGSize, closedNotchHeight: CGFloat) -> CGFloat {
+/// `openNotchExtraWidth`, or wider when the tabs need more room beside the camera.
+func openNotchWidth(closedNotchSize: CGSize, closedNotchHeight: CGFloat, tabCount: Int) -> CGFloat {
     let closedMusicWidth = closedNotchSize.width + 2 * max(0, closedNotchHeight - 12) + 20
-    return min(openNotchSize.width, closedMusicWidth + openNotchExtraWidth)
+    // Tabs sit left of the camera, mirrored by the same width on the right; 62 is the open notch's side padding
+    let fitsTabs = closedNotchSize.width + 2 * (CGFloat(tabCount) * openNotchTabWidth + 8) + 62
+    return min(openNotchSize.width, max(closedMusicWidth + openNotchExtraWidth, fitsTabs))
 }
 
 @MainActor func getClosedNotchSize(screenUUID: String? = nil) -> CGSize {

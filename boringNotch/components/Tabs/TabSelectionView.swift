@@ -15,15 +15,25 @@ struct TabModel: Identifiable {
     let view: NotchViews
 }
 
+/// Home first, then the other tabs in the order chosen in Settings, leaving out the ones turned off.
 var tabs: [TabModel] {
-    var tabs = [TabModel(label: "Home", icon: "house.fill", view: .home)]
-    if Defaults[.boringShelf] {
-        tabs.append(TabModel(label: "Shelf", icon: "tray.fill", view: .shelf))
+    orderedTabViews.filter(isTabAvailable).map { TabModel(label: $0.title, icon: $0.icon, view: $0) }
+}
+
+/// Every tab after Home in the user's order, including any the saved order doesn't know about yet.
+var orderedTabViews: [NotchViews] {
+    var order = Defaults[.tabOrder].filter { $0 != .home }
+    order += NotchViews.allCases.filter { $0 != .home && !order.contains($0) }
+    return [.home] + order
+}
+
+func isTabAvailable(_ view: NotchViews) -> Bool {
+    switch view {
+    case .home, .music: return true
+    case .calendar: return Defaults[.showCalendar]
+    case .agents: return Defaults[.agentIntegrationEnabled]
+    case .shelf: return Defaults[.boringShelf]
     }
-    if Defaults[.agentIntegrationEnabled] {
-        tabs.append(TabModel(label: "Agents", icon: "sparkles", view: .agents))
-    }
-    return tabs
 }
 
 struct TabSelectionView: View {

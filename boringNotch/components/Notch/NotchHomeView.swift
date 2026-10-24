@@ -16,11 +16,13 @@ import SwiftUI
 struct MusicPlayerView: View {
     @EnvironmentObject var vm: BoringViewModel
     let albumArtNamespace: Namespace.ID
+    /// Five control buttons don't fit in half of the home view; keep the middle three.
+    var dropsEdgeSlots = false
 
     static let albumArtSize: CGFloat = 52
 
     var body: some View {
-        MusicControlsView {
+        MusicControlsView(dropsEdgeSlots: dropsEdgeSlots) {
             AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace)
                 .frame(width: Self.albumArtSize, height: Self.albumArtSize)
         }
@@ -115,6 +117,7 @@ struct AlbumArtView: View {
 struct MusicControlsView<AlbumArt: View>: View {
     /// Shown to the left of the song title.
     let albumArt: () -> AlbumArt
+    let dropsEdgeSlots: Bool
     @ObservedObject var musicManager = MusicManager.shared
     @State private var sliderValue: Double = 0
     @State private var dragging: Bool = false
@@ -122,7 +125,8 @@ struct MusicControlsView<AlbumArt: View>: View {
     @Default(.musicControlSlots) private var slotConfig
     @Default(.musicControlSlotLimit) private var slotLimit
 
-    init(@ViewBuilder albumArt: @escaping () -> AlbumArt) {
+    init(dropsEdgeSlots: Bool = false, @ViewBuilder albumArt: @escaping () -> AlbumArt) {
+        self.dropsEdgeSlots = dropsEdgeSlots
         self.albumArt = albumArt
     }
 
@@ -234,8 +238,7 @@ struct MusicControlsView<AlbumArt: View>: View {
         )
         let padded = slotConfig.padded(to: sanitizedLimit, filler: .none)
         let result = Array(padded.prefix(sanitizedLimit))
-        // Five buttons don't fit in the music half beside the calendar; drop the edge ones
-        if Defaults[.showCalendar] && result.count >= 5 {
+        if dropsEdgeSlots && result.count >= 5 {
             return Array(result.dropFirst().dropLast())
         }
 
@@ -429,6 +432,8 @@ struct NotchHomeView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     let albumArtNamespace: Namespace.ID
 
+    @Default(.homeLayout) private var homeLayout
+
     var body: some View {
         Group {
             if !coordinator.firstLaunch {
@@ -439,24 +444,36 @@ struct NotchHomeView: View {
         .transition(.opacity)
     }
 
-    /// Music on the left half, calendar on the right half.
+    /// The panes chosen in Settings, side by side in equal halves.
     private var mainContent: some View {
-        HStack(alignment: .top, spacing: 12) {
-            MusicPlayerView(albumArtNamespace: albumArtNamespace)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
-
-            if Defaults[.showCalendar] {
-                CalendarView()
-                    .frame(maxWidth: .infinity)
-                    .onHover { isHovering in
-                        vm.isHoveringCalendar = isHovering
-                    }
-                    .environmentObject(vm)
-                    .transition(.opacity)
+        let panes = homeLayout.panes
+        return HStack(alignment: .top, spacing: 12) {
+            ForEach(panes, id: \.self) { pane in
+                paneView(pane, isHalf: panes.count > 1)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
         .blur(radius: vm.notchState == .closed ? 30 : 0)
+    }
+}
+
+extension NotchHomeView {
+    @ViewBuilder
+    func paneView(_ pane: NotchViews, isHalf: Bool) -> some View {
+        switch pane {
+        case .calendar:
+            CalendarView()
+                .onHover { isHovering in
+                    vm.isHoveringCalendar = isHovering
+                }
+                .environmentObject(vm)
+                .transition(.opacity)
+        case .agents:
+            AgentsHomePane()
+        default:
+            MusicPlayerView(albumArtNamespace: albumArtNamespace, dropsEdgeSlots: isHalf)
+        }
     }
 }
 
